@@ -30,8 +30,9 @@ def fetchServiceList() -> str:
 @tool
 def payElectricityBill():
     """
-    Function to deal with electricity related payments.
+    Function to deal with electricity bill related payments.
     """
+    pass
 
 tools = [fetchUserDetails, fetchServiceList]
 toolsMap = {'fetchUserDetails':fetchUserDetails, "fetchServiceList":fetchServiceList}
