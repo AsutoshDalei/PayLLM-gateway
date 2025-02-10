@@ -27,6 +27,11 @@ def fetchServiceList() -> str:
     serviceList = {'electricity':"Pay electricity bill", 'gas':"Pay the gas bill", 'water':"Pay the water bill", 'wifi':"pay the wifi bill"}
     return json.dumps(serviceList)
 
+@tool
+def payElectricityBill():
+    """
+    Function to deal with electricity related payments.
+    """
 
 tools = [fetchUserDetails, fetchServiceList]
 toolsMap = {'fetchUserDetails':fetchUserDetails, "fetchServiceList":fetchServiceList}
@@ -40,7 +45,14 @@ messages.append(aiMsg)
 
 while True:
     if aiMsg.tool_calls:
-        print("None")
+        for toolCall in aiMsg.tool_calls:
+            toolSelected = toolsMap[toolCall['name']]
+            toolMsg = toolSelected.invoke(toolCall)
+            messages.append(toolMsg)
+        aiMsg = llm.invoke(messages)
+        messages.append(aiMsg)
+        print(f"AI Response:\n--> {aiMsg.content}")
+        continue
 
     userInput = input("User Input:\n -->")
     if userInput == '/end':
@@ -54,5 +66,7 @@ while True:
     messages.append(HumanMessage(content=userInput))
     aiMsg = llm.invoke(messages)
     if aiMsg.content != '':
-        print("AI Response:\n--> {aiMsg.content}")
+        print(f"AI Response:\n--> {aiMsg.content}")
     messages.append(aiMsg)
+
+    # print(messages)
