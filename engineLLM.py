@@ -21,26 +21,46 @@ mockWifiBills = {
 }
 
 class BillPay():
-    def __init__(self, service, llm, billDB):
-        serviceTools = []
+    def __init__(self, service: str, llm, billDB: dict):
+        serviceTools = [self.fetchBill, self.payBill]
         self.service = service
         self.llmService = llm.bind_tools(serviceTools)
 
-        self.userDetails = fetchUserDetails()
+        # self.userDetails = fetchUserDetails()
         self.billDB = billDB
 
     @tool
     def fetchBill(self, billNumber):
         """Function to fetch bill details using bill number. Input: Bill Number. Output: Bill Amount, Bill Details"""
         # This is a mock setup, for the sole purpose of testing the system.
-        return json.dumps(self.billDB[billNumber])
+        try:
+            return json.dumps(self.billDB[billNumber])
+        except:
+            return "Bill not found"
     
+    @tool
     def payBill(self, billNumber):
         """Function to pay bill using bill number. Input: Bill Number. Output: Bill paid status"""
          # This is a mock setup, for the sole purpose of testing the system.
-        if self.billDB[billNumber]
+        if self.billDB[billNumber]['status'] == 'Paid':
+            return "Bill paid already"
+        self.billDB[billNumber]['status'] = 'Paid'
+        return "Bill paid successfully"
+
+    @tool
+    def eventSuccess(self):
+        """Function to define if event is successful or not. Unless you feel the event is successful, do not call this tool."""
+        return "eventSuccessFlag"
+    
+    def event(self):
+        serviceMessages = [SystemMessage(content = "You are a helpful bill payment assistant for a user. Restrict your response to just this task, nothing else. Strictly start by asking the user about the bill number. Followed by asking if you should fetch the bill or not. Followed by asking if you shoud pay the bill or not.")]
         
 
+
+
+        
+elecBillPay = BillPay(service='Electricity', llm = llm, billDB=mockElectricityBills)
+wifiBillPay = BillPay(service='WiFi', llm=llm, billDB=mockWifiBills)
 
 # Creating Tools
 @tool
@@ -64,18 +84,22 @@ def fetchServiceList() -> str:
 @tool
 def payElectricityBill():
     """
-    Function to deal with electricity bill related payments.
+    Tool to handle all electricity bill related payments.
     """
-    pass
+    print("entered here")
+    elecBillPay.event()
 
-tools = [fetchUserDetails, fetchServiceList]
-toolsMap = {'fetchUserDetails':fetchUserDetails, "fetchServiceList":fetchServiceList}
+tools = [fetchUserDetails, fetchServiceList, payElectricityBill]
+toolsMap = {'fetchUserDetails':fetchUserDetails, "fetchServiceList":fetchServiceList, "payElectricityBill":payElectricityBill}
 
 llm = llm.bind_tools(tools)
 
 # Central session messages
-messages = [SystemMessage(content = "You are a helpful bill payment assistant for a user. Start by greeting the user.")]
 global messages
+# messages = [SystemMessage(content = "You are a helpful bill payment assistant for a user. Start by greeting the user.")]
+messages = [SystemMessage(content = "You are a helpful bill payment assistant for a user. Restrict your response to just this task, nothing else. Strictly start by asking the user about the bill number. Followed by asking if you should fetch the bill or not. Followed by asking if you shoud pay the bill or not.")]
+
+
 aiMsg = llm.invoke(messages)
 messages.append(aiMsg)
 
@@ -94,7 +118,7 @@ while True:
     if userInput == '/end':
         break
     if userInput == '/clear':
-        messages = [SystemMessage(content = "You are a helpful bill payment assistant for a user. Start by greeting the user.")]
+        messages = [SystemMessage(content = "You are a helpful bill payment assistant for a user. Do not hallucinate. Restrict yourself to information that you know of for sure onlt. Start by greeting the user.")]
         aiMsg = llm.invoke(messages)
         messages.append(aiMsg)
         continue
