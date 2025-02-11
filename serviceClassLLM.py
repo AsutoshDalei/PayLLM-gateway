@@ -42,7 +42,7 @@ class BillPay():
     
     def event(self):
         serviceMessages = [SystemMessage(content = "You are a helpful bill payment assistant for a user. Restrict your response to just this task, nothing else. Strictly start by asking the user about the bill number. Do not start without the bill number. Followed by asking if you should fetch the bill or not. Followed by asking if you shoud pay the bill or not.")]
-        serviceMessages = [SystemMessage(content = "You are a helpful bill payment assistant for a user. Restrict your response to just this task, nothing else. Ask the user about the bill number first.")]
+        serviceMessages = [SystemMessage(content = "You are a helpful bill payment assistant for a user. Restrict your response to just this task, nothing else. Start by ask the user which bill number to pay. Do not execute functions without command.")]
         
         eventFlag = "eventInProgress"
 
@@ -51,11 +51,11 @@ class BillPay():
         while eventFlag != 'eventSuccessFlag':
             if aiMsgSer.tool_calls:
                 for toolCallSer in aiMsgSer.tool_calls:
-                    toolSelected = self.serviceToolsMap[toolCallSer]
+                    # print(toolCallSer)
+                    toolSelected = self.serviceToolsMap[toolCallSer['name']]
                     if toolCallSer == 'eventSuccess':
                         eventFlag = toolSelected.invoke(toolCallSer)
                         break
-                    print(toolCallSer) 
                     
                     toolMsg = toolSelected.invoke(toolCallSer)
                     serviceMessages.append(toolMsg)
