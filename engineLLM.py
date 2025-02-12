@@ -8,6 +8,8 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 # Importing model
 llm = ChatOllama(model="llama3.2", temperature=0)
 
+
+
 # Creating Tools
 @tool
 def fetchUserDetails() -> str:
