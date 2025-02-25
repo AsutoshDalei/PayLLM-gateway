@@ -79,9 +79,9 @@ def event(llm):
     firstInteraction = True
     while True:
         if firstInteraction:
-                print(f"AI Response:\n --> {aiMsgSer.content}")
-                firstInteraction = False
-                llmService = llm.bind_tools(serviceTools)
+            print(f"AI Response:\n --> {aiMsgSer.content}")
+            firstInteraction = False
+            llmService = llm.bind_tools(serviceTools)
 
         if aiMsgSer.tool_calls:
             for toolCallSer in aiMsgSer.tool_calls:
