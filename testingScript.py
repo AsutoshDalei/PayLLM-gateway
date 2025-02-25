@@ -1,4 +1,3 @@
-# Importing necessary packages
 import json
 
 from langchain_ollama import ChatOllama
@@ -7,6 +6,13 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 # Importing model
 llm = ChatOllama(model="llama3.2", temperature=0)
+
+billDB = {
+    9182:{'Customer Name':'Asutosh Dalei','service provider':'TS Elec Board','unit':32,'Amount':341, "Due Date":'10/01/2025', 'status':'Paid'},
+    1928:{'Customer Name':'Asutosh Dalei','service provider':'TS Elec Board','unit':37,'Amount':547, "Due Date":'11/02/2025','status':'Unpaid'},
+    1038:{'Customer Name':'Asutosh Dalei','service provider':'TS Elec Board','unit':23,'Amount':298, "Due Date":'09/10/2025','status':'Paid'}
+}
+
 
 initialSystemMessage = '''You are an excellent virtual assistant. Your name is PayLLM. In the first user interaction, respond directly without calling any tools.
 You should strictly follow the following steps:
@@ -32,48 +38,22 @@ PayLLM: Sure.
 PayLLM: The bill is paid.
 '''
 
-
-billDB = {
-    9182:{'Customer Name':'Asutosh Dalei','service provider':'TS Elec Board','unit':32,'Amount':341, "Due Date":'10/01/2025', 'status':'Paid', 'service':'Electricity'},
-    1928:{'Customer Name':'Asutosh Dalei','service provider':'TS Elec Board','unit':37,'Amount':547, "Due Date":'11/02/2025','status':'Unpaid', 'service':'Electricity'},
-    1038:{'Customer Name':'Asutosh Dalei','service provider':'TS Elec Board','unit':23,'Amount':298, "Due Date":'09/10/2025','status':'Paid', 'service':'Electricity'},
-    8321 :{'Customer Name':'Asutosh Dalei','service provider':'Airtel','Amount':1008, "Due Date":'04/03/2025', 'status':'Paid', 'service':'WiFi'},
-    1008:{'Customer Name':'Asutosh Dalei','service provider':'Airtel','Amount':1276, "Due Date":'04/02/2025','status':'Paid', 'service':'WiFi'},
-    1035:{'Customer Name':'Asutosh Dalei','service provider':'Airtel','Amount':1932, "Due Date":'08/04/2025','status':'Unpaid', 'service':'WiFi'}
-}
-
-
 @tool
 def payBill(billNumber: int) -> str:
     """Function to pay bill using bill number.
     Args:
         billNumber: Bill Number (String). Output: Bill paid status
     """
-    if billNumber not in billDB:
-        return "Bill Details not found."
     if billDB[billNumber]['status'] == 'Paid':
         return "Bill paid already"
     billDB[billNumber]['status'] = 'Paid'
     return "Bill paid successfully"
 
-@tool
-def fetchBill(billNumber):
-    """
-    Function to fetch bill details using bill number. Input: Bill Number. Output: Bill Amount, Bill Details
-    Args:
-        billNumber: Bill Number
-    """
-    try:
-        return json.dumps(billDB[billNumber])
-    except:
-        return "Bill not found"
-    
-serviceTools = [fetchBill,payBill]
-serviceToolsMap = {"fetchBill":fetchBill, "payBill": payBill}
-
+serviceTools = [payBill]
+serviceToolsMap = {"payBill": payBill}
 
 def event(llm):
-    serviceMessages = [SystemMessage(content = initialSystemMessage), HumanMessage(content='Help me fetch my bill. Ask me my bill number.')]
+    serviceMessages = [SystemMessage(content = initialSystemMessage), HumanMessage(content='Help me pay my bill. Ask me my bill number.')]
     llmService = llm
     aiMsgSer = llmService.invoke(serviceMessages)
     firstInteraction = True
@@ -88,6 +68,8 @@ def event(llm):
                 toolSelected = serviceToolsMap[toolCallSer['name']]
                 toolMsg = toolSelected.invoke(toolCallSer)
                 serviceMessages.append(toolMsg)
+
+
             aiMsgSer = llmService.invoke(serviceMessages)
             serviceMessages.append(aiMsgSer)
             print(f"AI Response:\n --> {aiMsgSer.content}")
@@ -100,6 +82,7 @@ def event(llm):
         if aiMsgSer.content != '':
             print(f"AI Response:\n--> {aiMsgSer.content}")
         serviceMessages.append(HumanMessage(content = userInput))
+
 
 try:
     event(llm)
