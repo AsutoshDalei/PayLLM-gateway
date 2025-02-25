@@ -26,7 +26,7 @@ def fetchServiceList() -> str:
     """
     Function contains information of all available services using this platform.
     """
-    serviceList = {'electricity':"Pay electricity bill", 'gas':"Pay the gas bill", 'water':"Pay the water bill", 'wifi':"pay the wifi bill"}
+    serviceList = {'electricity':"Pay electricity bill", 'gas':"Pay the gas bill", 'water':"Pay the water bill", 'wifi':"Pay the wifi bill"}
     return json.dumps(serviceList)
 
 @tool
@@ -35,7 +35,9 @@ def payElectricityBill():
     Tool to handle all electricity bill related payments.
     """
     print("entered here")
-    elecBillPay.event()
+    # elecBillPay.event()
+    return "electricity bill paid: 572 rupees."
+
 
 tools = [fetchUserDetails, fetchServiceList, payElectricityBill]
 toolsMap = {'fetchUserDetails':fetchUserDetails, "fetchServiceList":fetchServiceList, "payElectricityBill":payElectricityBill}
@@ -61,8 +63,10 @@ while True:
         messages.append(aiMsg)
         print(f"AI Response:\n--> {aiMsg.content}")
         continue
-
+    
+    # Text/Voice
     userInput = input("User Input:\n -->")
+
     if userInput == '/end':
         break
     if userInput == '/clear':
