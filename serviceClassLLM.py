@@ -71,8 +71,11 @@ def fetchBill(billNumber):
 serviceTools = [fetchBill,payBill]
 serviceToolsMap = {"fetchBill":fetchBill, "payBill": payBill}
 
-
+# @tool
 def event(llm):
+    '''
+    Payment Event
+    '''
     serviceMessages = [SystemMessage(content = initialSystemMessage), HumanMessage(content='Help me fetch my bill. Ask me my bill number.')]
     llmService = llm
     aiMsgSer = llmService.invoke(serviceMessages)
