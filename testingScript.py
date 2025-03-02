@@ -1,90 +1,74 @@
-import json
+from langchain_core.tools import tool
 
 from langchain_ollama import ChatOllama
+
+model = ChatOllama(model="llama3.2", temperature=0)
+
+from langchain.agents import AgentExecutor, create_tool_calling_agent
+from langchain_core.chat_history import InMemoryChatMessageHistory
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.tools import tool
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
-# Importing model
-llm = ChatOllama(model="llama3.2", temperature=0)
+memory = InMemoryChatMessageHistory(session_id="test-session")
+prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", "You are PayLLM, a conversational payment assistant. "
+               "Follow this structured flow:\n"
+               "1. Ask the user for their state.\n"
+               "2. Ask for the service provider.\n"
+               "3. Ask for the bill number.\n"
+               "4. Confirm fetching the bill.\n"
+               "5. Display the bill amount.\n"
+               "6. Ask for payment confirmation.\n"
+               "7. Confirm payment.\n"
+               "Maintain the flow based on previous responses."),
+        # First put the history
+        ("placeholder", "{chat_history}"),
+        # Then the new input
+        ("human", "{input}"),
+        # Finally the scratchpad
+        ("placeholder", "{agent_scratchpad}"),
+    ]
+)
 
-billDB = {
-    9182:{'Customer Name':'Asutosh Dalei','service provider':'TS Elec Board','unit':32,'Amount':341, "Due Date":'10/01/2025', 'status':'Paid'},
-    1928:{'Customer Name':'Asutosh Dalei','service provider':'TS Elec Board','unit':37,'Amount':547, "Due Date":'11/02/2025','status':'Unpaid'},
-    1038:{'Customer Name':'Asutosh Dalei','service provider':'TS Elec Board','unit':23,'Amount':298, "Due Date":'09/10/2025','status':'Paid'}
-}
-
-
-initialSystemMessage = '''You are an excellent virtual assistant. Your name is PayLLM. In the first user interaction, respond directly without calling any tools.
-You should strictly follow the following steps:
-0. Ask the user if they want to pay any bill.
-1. Ask the user the bill number.
-2. Ask the user if you should fetch the bill details.
-3. Inform the user the bill details once fetched.
-4. Ask the user if you should pay the bill.
-5. Is the user agrees, pay the bill.
-
-You should never use external knowledge, assumptions or information beyond what is explicitly shared or recieved.
-Strictly do not call tools unless absolutely needed.
-
-Example:
-User: Hello
-PayLLM: Hi. To help with your payments, please provide your bill number.
-User: 12345.
-PayLLM: Sure, should I fetch the bill?
-User: Yes, sure.
-PayLLM: The bill amount is 145
-User: Okay. Go ahead and pay it.
-PayLLM: Sure.
-PayLLM: The bill is paid.
-'''
 
 @tool
-def payBill(billNumber: int) -> str:
-    """Function to pay bill using bill number.
-    Args:
-        billNumber: Bill Number (String). Output: Bill paid status
-    """
-    if billDB[billNumber]['status'] == 'Paid':
-        return "Bill paid already"
-    billDB[billNumber]['status'] = 'Paid'
-    return "Bill paid successfully"
+def fetch_bill_details(state, provider, bill_number):
+    """Fetches bill details based on state, provider, and bill number."""
+    return f"The bill amount for {provider} in {state} (Bill No: {bill_number}) is ₹145."
+@tool
+def process_payment(bill_number):
+    """Processes payment for the given bill number."""
+    return f"Payment for Bill No: {bill_number} has been successfully processed."
 
-serviceTools = [payBill]
-serviceToolsMap = {"payBill": payBill}
-
-def event(llm):
-    serviceMessages = [SystemMessage(content = initialSystemMessage), HumanMessage(content='Help me pay my bill. Ask me my bill number.')]
-    llmService = llm
-    aiMsgSer = llmService.invoke(serviceMessages)
-    firstInteraction = True
-    while True:
-        if firstInteraction:
-                print(f"AI Response:\n --> {aiMsgSer.content}")
-                firstInteraction = False
-                llmService = llm.bind_tools(serviceTools)
-
-        if aiMsgSer.tool_calls:
-            for toolCallSer in aiMsgSer.tool_calls:
-                toolSelected = serviceToolsMap[toolCallSer['name']]
-                toolMsg = toolSelected.invoke(toolCallSer)
-                serviceMessages.append(toolMsg)
+tools = [fetch_bill_details, process_payment]
 
 
-            aiMsgSer = llmService.invoke(serviceMessages)
-            serviceMessages.append(aiMsgSer)
-            print(f"AI Response:\n --> {aiMsgSer.content}")
-            continue
-        userInput = input("User Input:\n -->")
-        if userInput == "/end":
-            break
-        serviceMessages.append(HumanMessage(content = userInput))
-        aiMsgSer = llmService.invoke(serviceMessages)
-        if aiMsgSer.content != '':
-            print(f"AI Response:\n--> {aiMsgSer.content}")
-        serviceMessages.append(HumanMessage(content = userInput))
+agent = create_tool_calling_agent(model, tools, prompt)
+agent_executor = AgentExecutor(agent=agent, tools=tools)
 
+agent_with_chat_history = RunnableWithMessageHistory(
+    agent_executor,
+    # This is needed because in most real world scenarios, a session id is needed
+    # It isn't really used here because we are using a simple in memory ChatMessageHistory
+    lambda session_id: memory,
+    input_messages_key="input",
+    history_messages_key="chat_history",
+)
 
-try:
-    event(llm)
-except Exception as e:
-    print('ERR',e)
+config = {"configurable": {"session_id": "test-session"}}
+
+# print(agent_with_chat_history.invoke({"input": "Hi, I'm polly! What's the output of magic_function of 3?"}, config)["output"])
+# print("---")
+# print(agent_with_chat_history.invoke({"input": "Remember my name?"}, config)["output"])
+# print("---")
+# print(agent_with_chat_history.invoke({"input": "what was that output again?"}, config)["output"])
+
+while True:
+    userInput = input("User Input:\n -->")
+    if userInput == '/end':
+        break
+    response = agent_with_chat_history.invoke({"input": userInput}, config)["output"]
+    print(f"AI Response:\n--> {response}")
+    print('---')
