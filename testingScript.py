@@ -6,7 +6,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
 # Initialize the LLaMA 3.2 model
-model = ChatOllama(model="llama3.2", temperature=0)
+model = ChatOllama(model="llama3.2:latest", temperature=0)
 
 # Setup conversation memory
 memory = InMemoryChatMessageHistory(session_id="payment-session")
@@ -27,9 +27,10 @@ serviceDB = {'odisha':
 
 # Define tool to fetch list of service providers
 @tool
-def fetch_service_provider(state: str, service: str):
-    """Fetches the list of providers based on user's state and bill service. Fetch only if you have all the information."""
-    provList = serviceDB[state][service]
+def fetch_service_provider(state: str = None, service: str = None):
+    """Fetches the list of providers based on user's state and bill service. 
+       Only call this tool when both state and service are known."""
+    provList = serviceDB[state.lower()][service.lower()]
 
     return f"The service providers for {state} are: {provList}"
 
@@ -47,12 +48,12 @@ def process_payment(bill_number: str):
     return f"Payment for Bill No: {bill_number} has been successfully processed."
 
 tools = [fetch_bill_details, process_payment, fetch_service_provider]
-# tools = [fetch_bill_details, process_payment]
+tools = [fetch_bill_details, process_payment]
 
 # Define the conversational prompt
 prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are PayLLM, a conversational payment assistant. Do not call any tools unless you have all the information\n"
-               "Follow this structured flow:\n"
+    ("system", "You are PayLLM, a conversational payment assistant\n"
+               "Follow this structured flow and do NOT call tools unless all required information is available:\n"
                "1. Greet the user if they greet you.\n"
                "2. Ask for the user their state and the service they want to pay the bill for.\n"
                "3. Get the list of service providers using fetch_service_provider tool.\n"
