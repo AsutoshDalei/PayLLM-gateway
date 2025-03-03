@@ -11,6 +11,28 @@ model = ChatOllama(model="llama3.2", temperature=0)
 # Setup conversation memory
 memory = InMemoryChatMessageHistory(session_id="payment-session")
 
+serviceDB = {'odisha':
+        {
+          'electricity':['OELE1', 'OELE2', 'OELE2'], 'gas':['OGAS1', 'OGAS2', 'OGAS3', 'OGAS4']
+        },
+    'goa':
+        {
+          'electricity':['GOELE1', 'GOELE2', 'GOELE2'], 'gas':['GOGAS1', 'GOGAS2', 'GOGAS3']
+        },
+    'telangana':
+        {
+          'electricity':['TSELE1', 'TSELE2', 'TSELE2', 'TSELE3'], 'gas':['TSGAS1', 'TSGAS2', 'TSGAS3']
+        }
+       }
+
+# Define tool to fetch list of service providers
+@tool
+def fetch_service_provider(state: str, service: str):
+    """Fetches the list of providers based on user's state and bill service. Fetch only if you have all the information."""
+    provList = serviceDB[state][service]
+
+    return f"The service providers for {state} are: {provList}"
+
 # Define tool to fetch bill details
 @tool
 def fetch_bill_details(state: str, provider: str, bill_number: str):
@@ -24,20 +46,22 @@ def process_payment(bill_number: str):
     """Processes payment for the given bill number."""
     return f"Payment for Bill No: {bill_number} has been successfully processed."
 
-tools = [fetch_bill_details, process_payment]
+tools = [fetch_bill_details, process_payment, fetch_service_provider]
+# tools = [fetch_bill_details, process_payment]
 
 # Define the conversational prompt
 prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are PayLLM, a conversational payment assistant. "
+    ("system", "You are PayLLM, a conversational payment assistant. Do not call any tools unless you have all the information\n"
                "Follow this structured flow:\n"
                "1. Greet the user if they greet you.\n"
-               "2. Ask for the user's state.\n"
-               "3. Ask for the service provider.\n"
-               "4. Ask for the bill number.\n"
-               "5. Confirm fetching the bill.\n"
-               "6. Display the bill amount.\n"
-               "7. Ask for payment confirmation.\n"
-               "8. Confirm payment.\n"
+               "2. Ask for the user their state and the service they want to pay the bill for.\n"
+               "3. Get the list of service providers using fetch_service_provider tool.\n"
+               "4. Ask for the service provider.\n"
+               "5. Ask for the bill number.\n"
+               "6. Confirm fetching the bill.\n"
+               "7. Display the bill amount.\n"
+               "8. Ask for payment confirmation.\n"
+               "9. Confirm payment.\n"
                "Maintain the flow based on previous responses."),
     ("placeholder", "{chat_history}"),
     ("human", "{input}"),
