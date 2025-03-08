@@ -27,32 +27,32 @@ serviceDB = {'odisha':
 
 # Define tool to fetch list of service providers
 @tool
-def fetch_service_provider(state: str = None, service: str = None):
-    """Fetches the list of providers based on user's state and bill service. 
-       Only call this tool when both state and service are known."""
+def fetch_service_provider(state: str, service: str)->str:
+    """Fetches the list of providers based on user's state and bill service. Only call this tool when both state and service are known."""
     provList = serviceDB[state.lower()][service.lower()]
 
     return f"The service providers for {state} are: {provList}"
 
 # Define tool to fetch bill details
 @tool
-def fetch_bill_details(state: str, provider: str, bill_number: str):
+def fetch_bill_details(state: str, provider: str, bill_number: str)->str:
     """Fetches bill details based on state, provider, and bill number."""
     # Simulated API response with static data for now
     return f"The bill amount for {provider} in {state} (Bill No: {bill_number}) is ₹145."
 
 # Define tool to process payment
 @tool
-def process_payment(bill_number: str):
+def process_payment(bill_number: str)->str:
     """Processes payment for the given bill number."""
     return f"Payment for Bill No: {bill_number} has been successfully processed."
 
 tools = [fetch_bill_details, process_payment, fetch_service_provider]
-tools = [fetch_bill_details, process_payment]
+# tools = [fetch_bill_details, process_payment]
 
 # Define the conversational prompt
 prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are PayLLM, a conversational payment assistant\n"
+    ("system", "You are PayLLM, a conversational payment assistant. NEVER call tools until you have collected all required information:\n\n"
+               "You should never use external knowledge, assumptions or information beyond what is explicitly shared or recieved.\n"
                "Follow this structured flow and do NOT call tools unless all required information is available:\n"
                "1. Greet the user if they greet you.\n"
                "2. Ask for the user their state and the service they want to pay the bill for.\n"
@@ -68,6 +68,7 @@ prompt = ChatPromptTemplate.from_messages([
     ("human", "{input}"),
     ("placeholder", "{agent_scratchpad}")
 ])
+
 
 # Create the agent for handling tool calls
 agent = create_tool_calling_agent(model, tools, prompt)
