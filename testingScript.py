@@ -4,6 +4,7 @@ from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.chat_history import InMemoryChatMessageHistory
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables.history import RunnableWithMessageHistory
+import traceback
 
 # Initialize the LLaMA 3.2 model
 model = ChatOllama(model="llama3.2:latest", temperature=0)
@@ -51,7 +52,7 @@ tools = [fetch_bill_details, process_payment, fetch_service_provider]
 
 # Define the conversational prompt
 prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are PayLLM, a conversational payment assistant. NEVER call tools until you have collected all required information:\n\n"
+    ("system", "You are PayLLM, a conversational payment assistant. NEVER call tools until you have collected all required information:\n"
                "You should never use external knowledge, assumptions or information beyond what is explicitly shared or recieved.\n"
                "Follow this structured flow and do NOT call tools unless all required information is available:\n"
                "1. Greet the user if they greet you.\n"
@@ -68,6 +69,14 @@ prompt = ChatPromptTemplate.from_messages([
     ("human", "{input}"),
     ("placeholder", "{agent_scratchpad}")
 ])
+
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "You name is AgentHi. You should always think about what to do, do not use any tool if it is not needed.\n"),
+    ("placeholder", "{chat_history}"),
+    ("human", "{input}"),
+    ("placeholder", "{agent_scratchpad}")
+])
+
 
 
 # Create the agent for handling tool calls
@@ -103,3 +112,4 @@ try:
         print('---')
 except Exception as e:
     print("ERR", e)
+    # print(traceback.format_exc())
