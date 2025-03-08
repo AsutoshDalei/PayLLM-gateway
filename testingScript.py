@@ -14,7 +14,7 @@ memory = InMemoryChatMessageHistory(session_id="payment-session")
 
 serviceDB = {'odisha':
         {
-          'electricity':['OELE1', 'OELE2', 'OELE2'], 'gas':['OGAS1', 'OGAS2', 'OGAS3', 'OGAS4']
+          'electricity':['OELE1', 'OELE2', 'OELE3'], 'gas':['OGAS1', 'OGAS2', 'OGAS3', 'OGAS4'], 'water':['OWAT1', 'OWAT2']
         },
     'goa':
         {
@@ -29,10 +29,14 @@ serviceDB = {'odisha':
 # Define tool to fetch list of service providers
 @tool
 def fetch_service_provider(state: str, service: str)->str:
-    """Fetches the list of providers based on user's state and bill service. Only call this tool when both state and service are known."""
+    """Fetches the list of providers based on user's state and bill service."""
+    if state == '' or service == '':
+        return f"Ask the user for the state and service."
+    
     provList = serviceDB[state.lower()][service.lower()]
+    print("HERE")
 
-    return f"The service providers for {state} are: {provList}"
+    return f"The service providers for {state} are: {provList}. Tell the entire list."
 
 # Define tool to fetch bill details
 @tool
@@ -54,7 +58,7 @@ tools = [fetch_bill_details, process_payment, fetch_service_provider]
 prompt = ChatPromptTemplate.from_messages([
     ("system", "You are PayLLM, a conversational payment assistant. NEVER call tools until you have collected all required information:\n"
                "You should never use external knowledge, assumptions or information beyond what is explicitly shared or recieved.\n"
-               "Follow this structured flow and do NOT call tools unless all required information is available:\n"
+               "Follow this strict sequence and do NOT proceed to the next step unless all information from the previous step is available:\n"
                "1. Greet the user if they greet you.\n"
                "2. Ask for the user their state and the service they want to pay the bill for.\n"
                "3. Get the list of service providers using fetch_service_provider tool.\n"
@@ -70,12 +74,12 @@ prompt = ChatPromptTemplate.from_messages([
     ("placeholder", "{agent_scratchpad}")
 ])
 
-prompt = ChatPromptTemplate.from_messages([
-    ("system", "You name is AgentHi. You should always think about what to do, do not use any tool if it is not needed.\n"),
-    ("placeholder", "{chat_history}"),
-    ("human", "{input}"),
-    ("placeholder", "{agent_scratchpad}")
-])
+# prompt = ChatPromptTemplate.from_messages([
+#     ("system", "You name is AgentHi. You should always think about what to do, do not use any tool if it is not needed.\n"),
+#     ("placeholder", "{chat_history}"),
+#     ("human", "{input}"),
+#     ("placeholder", "{agent_scratchpad}")
+# ])
 
 
 
