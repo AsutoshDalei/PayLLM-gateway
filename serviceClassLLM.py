@@ -1,110 +1,119 @@
-# Importing necessary packages
-import json
-
-from langchain_ollama import ChatOllama
 from langchain_core.tools import tool
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_ollama import ChatOllama
+from langchain.agents import AgentExecutor, create_tool_calling_agent
+from langchain_core.chat_history import InMemoryChatMessageHistory
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables.history import RunnableWithMessageHistory
+import traceback
 
-# Importing model
-llm = ChatOllama(model="llama3.2", temperature=0)
+# Initialize the LLaMA 3.2 model
+model = ChatOllama(model="llama3.2:latest", temperature=0)
 
-initialSystemMessage = '''You are an excellent virtual assistant. Your name is PayLLM. In the first user interaction, respond directly without calling any tools.
-You should strictly follow the following steps:
-0. Ask the user if they want to pay any bill.
-1. Ask the user the bill number.
-2. Ask the user if you should fetch the bill details.
-3. Inform the user the bill details once fetched.
-4. Ask the user if you should pay the bill.
-5. Is the user agrees, pay the bill.
+# Setup conversation memory
+memory = InMemoryChatMessageHistory(session_id="payment-session")
 
-You should never use external knowledge, assumptions or information beyond what is explicitly shared or recieved.
-Strictly do not call tools unless absolutely needed.
+serviceDB = {'odisha':
+        {
+          'electricity':['OELE1', 'OELE2', 'OELE3'], 'gas':['OGAS1', 'OGAS2', 'OGAS3', 'OGAS4'], 'water':['OWAT1', 'OWAT2']
+        },
+    'goa':
+        {
+          'electricity':['GOELE1', 'GOELE2', 'GOELE2'], 'gas':['GOGAS1', 'GOGAS2', 'GOGAS3']
+        },
+    'telangana':
+        {
+          'electricity':['TSELE1', 'TSELE2', 'TSELE2', 'TSELE3'], 'gas':['TSGAS1', 'TSGAS2', 'TSGAS3']
+        }
+       }
 
-Example:
-User: Hello
-PayLLM: Hi. To help with your payments, please provide your bill number.
-User: 12345.
-PayLLM: Sure, should I fetch the bill?
-User: Yes, sure.
-PayLLM: The bill amount is 145
-User: Okay. Go ahead and pay it.
-PayLLM: Sure.
-PayLLM: The bill is paid.
-'''
-
-
-billDB = {
-    9182:{'Customer Name':'Asutosh Dalei','service provider':'TS Elec Board','unit':32,'Amount':341, "Due Date":'10/01/2025', 'status':'Paid', 'service':'Electricity'},
-    1928:{'Customer Name':'Asutosh Dalei','service provider':'TS Elec Board','unit':37,'Amount':547, "Due Date":'11/02/2025','status':'Unpaid', 'service':'Electricity'},
-    1038:{'Customer Name':'Asutosh Dalei','service provider':'TS Elec Board','unit':23,'Amount':298, "Due Date":'09/10/2025','status':'Paid', 'service':'Electricity'},
-    8321 :{'Customer Name':'Asutosh Dalei','service provider':'Airtel','Amount':1008, "Due Date":'04/03/2025', 'status':'Paid', 'service':'WiFi'},
-    1008:{'Customer Name':'Asutosh Dalei','service provider':'Airtel','Amount':1276, "Due Date":'04/02/2025','status':'Paid', 'service':'WiFi'},
-    1035:{'Customer Name':'Asutosh Dalei','service provider':'Airtel','Amount':1932, "Due Date":'08/04/2025','status':'Unpaid', 'service':'WiFi'}
-}
-
-
+# Define tool to fetch list of service providers
 @tool
-def payBill(billNumber: int) -> str:
-    """Function to pay bill using bill number.
-    Args:
-        billNumber: Bill Number (String). Output: Bill paid status
-    """
-    if billNumber not in billDB:
-        return "Bill Details not found."
-    if billDB[billNumber]['status'] == 'Paid':
-        return "Bill paid already"
-    billDB[billNumber]['status'] = 'Paid'
-    return "Bill paid successfully"
-
-@tool
-def fetchBill(billNumber):
-    """
-    Function to fetch bill details using bill number. Input: Bill Number. Output: Bill Amount, Bill Details
-    Args:
-        billNumber: Bill Number
-    """
-    try:
-        return json.dumps(billDB[billNumber])
-    except:
-        return "Bill not found"
+def fetch_service_provider(state: str, service: str)->str:
+    """Fetches the list of providers based on user's state and bill service."""
+    if state == '' or service == '':
+        return f"Ask the user for the state and service."
     
-serviceTools = [fetchBill,payBill]
-serviceToolsMap = {"fetchBill":fetchBill, "payBill": payBill}
+    provList = serviceDB[state.lower()][service.lower()]
+    print("HERE")
 
-# @tool
-def event(llm):
-    '''
-    Payment Event
-    '''
-    serviceMessages = [SystemMessage(content = initialSystemMessage), HumanMessage(content='Help me fetch my bill. Ask me my bill number.')]
-    llmService = llm
-    aiMsgSer = llmService.invoke(serviceMessages)
-    firstInteraction = True
-    while True:
-        if firstInteraction:
-            print(f"AI Response:\n --> {aiMsgSer.content}")
-            firstInteraction = False
-            llmService = llm.bind_tools(serviceTools)
+    return f"The service providers for {state} are: {provList}. Tell the entire list."
 
-        if aiMsgSer.tool_calls:
-            for toolCallSer in aiMsgSer.tool_calls:
-                toolSelected = serviceToolsMap[toolCallSer['name']]
-                toolMsg = toolSelected.invoke(toolCallSer)
-                serviceMessages.append(toolMsg)
-            aiMsgSer = llmService.invoke(serviceMessages)
-            serviceMessages.append(aiMsgSer)
-            print(f"AI Response:\n --> {aiMsgSer.content}")
-            continue
-        userInput = input("User Input:\n -->")
-        if userInput == "/end":
-            break
-        serviceMessages.append(HumanMessage(content = userInput))
-        aiMsgSer = llmService.invoke(serviceMessages)
-        if aiMsgSer.content != '':
-            print(f"AI Response:\n--> {aiMsgSer.content}")
-        serviceMessages.append(HumanMessage(content = userInput))
+# Define tool to fetch bill details
+@tool
+def fetch_bill_details(state: str, provider: str, bill_number: str)->str:
+    """Fetches bill details based on state, provider, and bill number."""
+    # Simulated API response with static data for now
+    return f"The bill amount for {provider} in {state} (Bill No: {bill_number}) is ₹145."
 
+# Define tool to process payment
+@tool
+def process_payment(bill_number: str)->str:
+    """Processes payment for the given bill number."""
+    return f"Payment for Bill No: {bill_number} has been successfully processed."
+
+tools = [fetch_bill_details, process_payment, fetch_service_provider]
+# tools = [fetch_bill_details, process_payment]
+
+# Define the conversational prompt
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "You are PayLLM, a conversational payment assistant. NEVER call tools until you have collected all required information:\n"
+               "You should never use external knowledge, assumptions or information beyond what is explicitly shared or recieved.\n"
+               "Follow this strict sequence and do NOT proceed to the next step unless all information from the previous step is available:\n"
+               "1. Greet the user if they greet you.\n"
+               "2. Ask for the user their state and the service they want to pay the bill for.\n"
+               "3. Get the list of service providers using fetch_service_provider tool.\n"
+               "4. Ask for the service provider.\n"
+               "5. Ask for the bill number.\n"
+               "6. Confirm fetching the bill.\n"
+               "7. Display the bill amount.\n"
+               "8. Ask for payment confirmation.\n"
+               "9. Confirm payment.\n"
+               "Maintain the flow based on previous responses."),
+    ("placeholder", "{chat_history}"),
+    ("human", "{input}"),
+    ("placeholder", "{agent_scratchpad}")
+])
+
+# prompt = ChatPromptTemplate.from_messages([
+#     ("system", "You name is AgentHi. You should always think about what to do, do not use any tool if it is not needed.\n"),
+#     ("placeholder", "{chat_history}"),
+#     ("human", "{input}"),
+#     ("placeholder", "{agent_scratchpad}")
+# ])
+
+
+
+# Create the agent for handling tool calls
+agent = create_tool_calling_agent(model, tools, prompt)
+
+# Create the agent executor
+agent_executor = AgentExecutor(agent=agent, tools=tools)
+
+# Wrap with memory to manage the conversation history
+agent_with_chat_history = RunnableWithMessageHistory(
+    agent_executor,
+    lambda session_id: memory,
+    input_messages_key="input",
+    history_messages_key="chat_history",
+)
+
+# Configuration for session tracking
+config = {"configurable": {"session_id": "payment-session"}}
+
+# Chat loop to interact with the user
 try:
-    event(llm)
+    while True:
+        user_input = input("User Input:\n --> ")
+        
+        if user_input.lower() == '/end':  # End the conversation if the user types '/end'
+            break
+        
+        # Invoke the agent to handle the conversation and return the response
+        response = agent_with_chat_history.invoke({"input": user_input}, config)["output"]
+        
+        # Print the agent's response
+        print(f"AI Response:\n--> {response}")
+        print('---')
 except Exception as e:
-    print('ERR',e)
+    print("ERR", e)
+    # print(traceback.format_exc())
