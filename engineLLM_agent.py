@@ -60,9 +60,7 @@ agent_with_chat_history = RunnableWithMessageHistory(
 
 # Configuration for session tracking
 config = {"configurable": {"session_id": "payment-session"}}
-prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are PayLLM, a conversational payment assistant.")
-])
+
 
 # Chat loop to interact with the user
 try:
