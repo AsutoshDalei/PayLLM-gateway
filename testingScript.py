@@ -5,12 +5,9 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableLambda
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.chat_history import InMemoryChatMessageHistory
+from langchain_core.runnables.history import RunnableWithMessageHistory
 
 from langchain.agents import create_tool_calling_agent, AgentExecutor
-from langchain.agents import initialize_agent
-
-
-
 
 import traceback
 
@@ -63,13 +60,13 @@ def general_purpose(query: str)->str:
 
 
 initialSystemMessage = '''You are PayLLM, a conversational payment assistant. Do not call tools unless absolutely needed.
-Follow this structured flow:
+Follow this structured flow. DO NOT DEVIATE, ASSUME ANYTHING AND HALLUCINATE:
 1. Greet the user if they greet you.
-2. Ask for the user's state, followed by the service provider and the bill number.
-4. Fetching the bill by calling the fetch_bill_details tool.
-6. Display the bill amount.
-7. Ask for payment confirmation.
-8. Confirm payment.
+2. Ask for the user's state, followed by the service. Call the fetch_service_provider tool and display the service providers.
+3. Ask the user for the bill number. Using this, call the fetch_bill_details tool.
+4. Display the bill amount.
+5. Ask for payment confirmation.
+6. Confirm payment.
 Maintain the flow based on previous responses.'''
 
 # initialSystemMessage = '''You are PayLLM, a conversational payment assistant. You only speak in hinglish. DO NOT CALL ANY TOOLS. STRICTLY.'''
@@ -109,12 +106,14 @@ prompt = ChatPromptTemplate.from_messages([
 tools = [fetch_bill_details, process_payment, fetch_service_provider]
 agent = create_tool_calling_agent(llm, tools, prompt)
 
-agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
-
+agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=False)
+agent_with_chat_history = RunnableWithMessageHistory(agent_executor,lambda session_id: memory, input_messages_key="input", history_messages_key="chat_history")
+config = {"configurable": {"session_id": "payment-session"}}
 
 while True:
     userInput = input("User Input:\n -->")
     if userInput == '/end':
         break
-    resp = agent_executor.invoke({'input':userInput})
+    # resp = agent_executor.invoke({'input':userInput})
+    resp = agent_with_chat_history.invoke({"input": userInput}, config)
     print(resp['output'])
