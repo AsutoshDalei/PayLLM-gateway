@@ -53,10 +53,10 @@ def process_payment(bill_number: str)->str:
     """Processes payment for the given bill number."""
     return f"Payment for Bill No: {bill_number} has been successfully processed."
 
-@tool
-def general_purpose(query: str)->str:
-    """For general purpose user queries."""
-    return llm.invoke(HumanMessage(content = query))
+# @tool
+# def general_purpose(query: str)->str:
+#     """For general purpose user queries."""
+#     return llm.invoke(HumanMessage(content = query))
 
 
 initialSystemMessage = '''You are PayLLM, a conversational payment assistant. Do not call tools unless absolutely needed.
@@ -69,51 +69,52 @@ Follow this structured flow. DO NOT DEVIATE, ASSUME ANYTHING AND HALLUCINATE:
 6. Confirm payment.
 Maintain the flow based on previous responses.'''
 
-# initialSystemMessage = '''You are PayLLM, a conversational payment assistant. You only speak in hinglish. DO NOT CALL ANY TOOLS. STRICTLY.'''
+initialSystemMessage = '''You are PayLLM, a helpful assistant. Greet the user if the user greets you.'''
 
-# globalMessages = [SystemMessage(content = initialSystemMessage), HumanMessage(content='Hello. Start my payment process.')]
-
-# tools = [fetch_bill_details, process_payment, fetch_service_provider, general_purpose]
-# toolsMap = {"fetch_bill_details":fetch_bill_details, "process_payment": process_payment, "fetch_service_provider":fetch_service_provider, 'general_purpose':general_purpose}
-# llmService = llm.bind_tools(tools)
-
-# aiMsgSer = llmService.invoke(globalMessages)
-# while True:
-#     print(globalMessages)
-#     if aiMsgSer.tool_calls:
-#         for toolCallSer in aiMsgSer.tool_calls:
-#             print(f"TOOL:{toolCallSer['name']}")
-
-#     userInput = input("User Input:\n -->")
-#     if userInput == '/end':
-#         break
-#     globalMessages.append(HumanMessage(content = userInput))
-#     aiMsgSer = llmService.invoke(globalMessages)
-#     if aiMsgSer.content != '':
-#         print(f"AI Response:\n--> {aiMsgSer.content}")
-#     globalMessages.append(aiMsgSer)
-
-
-memory = InMemoryChatMessageHistory(session_id="payment-session")
-
-prompt = ChatPromptTemplate.from_messages([
-    ("system", initialSystemMessage), 
-    ("placeholder", "{chat_history}"),
-    ("human", "{input}"), 
-    ("placeholder", "{agent_scratchpad}"),
-])
+globalMessages = [SystemMessage(content = initialSystemMessage), HumanMessage(content='Hello. Start my payment process.')]
+globalMessages = [SystemMessage(content = initialSystemMessage)]
 
 tools = [fetch_bill_details, process_payment, fetch_service_provider]
-agent = create_tool_calling_agent(llm, tools, prompt)
+toolsMap = {"fetch_bill_details":fetch_bill_details, "process_payment": process_payment, "fetch_service_provider":fetch_service_provider}
+llmService = llm.bind_tools(tools)
 
-agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=False)
-agent_with_chat_history = RunnableWithMessageHistory(agent_executor,lambda session_id: memory, input_messages_key="input", history_messages_key="chat_history")
-config = {"configurable": {"session_id": "payment-session"}}
-
+aiMsgSer = llmService.invoke(globalMessages)
 while True:
+    # print(globalMessages)
+    if aiMsgSer.tool_calls:
+        for toolCallSer in aiMsgSer.tool_calls:
+            print(f"TOOL:{toolCallSer['name']}")
+
     userInput = input("User Input:\n -->")
     if userInput == '/end':
         break
-    # resp = agent_executor.invoke({'input':userInput})
-    resp = agent_with_chat_history.invoke({"input": userInput}, config)
-    print(resp['output'])
+    globalMessages.append(HumanMessage(content = userInput))
+    aiMsgSer = llmService.invoke(globalMessages)
+    if aiMsgSer.content != '':
+        print(f"AI Response:\n--> {aiMsgSer.content}")
+    globalMessages.append(aiMsgSer)
+
+
+# memory = InMemoryChatMessageHistory(session_id="payment-session")
+
+# prompt = ChatPromptTemplate.from_messages([
+#     ("system", initialSystemMessage), 
+#     ("placeholder", "{chat_history}"),
+#     ("human", "{input}"), 
+#     ("placeholder", "{agent_scratchpad}"),
+# ])
+
+# tools = [fetch_bill_details, process_payment, fetch_service_provider]
+# agent = create_tool_calling_agent(llm, tools, prompt)
+
+# agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=False)
+# agent_with_chat_history = RunnableWithMessageHistory(agent_executor,lambda session_id: memory, input_messages_key="input", history_messages_key="chat_history")
+# config = {"configurable": {"session_id": "payment-session"}}
+
+# while True:
+#     userInput = input("User Input:\n -->")
+#     if userInput == '/end':
+#         break
+#     # resp = agent_executor.invoke({'input':userInput})
+#     resp = agent_with_chat_history.invoke({"input": userInput}, config)
+#     print(resp['output'])
