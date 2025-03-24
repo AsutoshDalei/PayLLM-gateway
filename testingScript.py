@@ -65,7 +65,7 @@ def process_payment(bill_number: str)->str:
 
 initialSystemMessage = '''You are PayLLM, a conversational payment assistant. STRICTLY CALL TOOLS ONLY WHEN NEEDED.
 Follow this structured flow. DO NOT DEVIATE, DO NOT ASSUME ANYTHING AND DO NOT HALLUCINATE:
-1. Greet the user if they greet you.
+1. Say hello to the the user if they greet you.
 2. Ask for the user's state, followed by the service.
 3. Ask the user for the bill number.
 4. Display the bill amount.
