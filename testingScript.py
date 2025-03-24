@@ -2,17 +2,21 @@ import json
 from langchain_ollama import ChatOllama
 from langchain_core.tools import tool
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-from langchain_core.runnables import RunnableLambda
-from langchain.prompts import ChatPromptTemplate
-from langchain_core.chat_history import InMemoryChatMessageHistory
-from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain.chains.conversation.memory import ConversationBufferMemory
+from langchain.chains import ConversationChain
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import START, MessagesState, StateGraph
 
-from langchain.agents import create_tool_calling_agent, AgentExecutor
+
 
 import traceback
 
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+
+
 # Initialize the LLaMA 3.2 model
 llm = ChatOllama(model="llama3.2:latest", temperature=0)
+llm = ChatOllama(model="llama3.1:8b", temperature=0)
 
 serviceDB = {'odisha':
         {
@@ -31,7 +35,7 @@ serviceDB = {'odisha':
 # Define tool to fetch list of service providers
 @tool
 def fetch_service_provider(state: str, service: str)->str:
-    """Fetches the list of providers based on user's state and bill service."""
+    """Funtion to get the list of providers based on user's state and bill service."""
     if state == '' or service == '':
         return f"Ask the user for the state and service."
     
@@ -43,14 +47,14 @@ def fetch_service_provider(state: str, service: str)->str:
 # Define tool to fetch bill details
 @tool
 def fetch_bill_details(state: str, provider: str, bill_number: str)->str:
-    """Fetches bill details based on state, provider, and bill number."""
+    """Function to get the bill details based on state, provider, and bill number."""
     # Simulated API response with static data for now
     return f"The bill amount for {provider} in {state} (Bill No: {bill_number}) is ₹145."
 
 # Define tool to process payment
 @tool
 def process_payment(bill_number: str)->str:
-    """Processes payment for the given bill number."""
+    """Function to processes payment for the given bill number."""
     return f"Payment for Bill No: {bill_number} has been successfully processed."
 
 # @tool
@@ -59,62 +63,51 @@ def process_payment(bill_number: str)->str:
 #     return llm.invoke(HumanMessage(content = query))
 
 
-initialSystemMessage = '''You are PayLLM, a conversational payment assistant. Do not call tools unless absolutely needed.
-Follow this structured flow. DO NOT DEVIATE, ASSUME ANYTHING AND HALLUCINATE:
+initialSystemMessage = '''You are PayLLM, a conversational payment assistant. STRICTLY CALL TOOLS ONLY WHEN NEEDED.
+Follow this structured flow. DO NOT DEVIATE, DO NOT ASSUME ANYTHING AND DO NOT HALLUCINATE:
 1. Greet the user if they greet you.
-2. Ask for the user's state, followed by the service. Call the fetch_service_provider tool and display the service providers.
-3. Ask the user for the bill number. Using this, call the fetch_bill_details tool.
+2. Ask for the user's state, followed by the service.
+3. Ask the user for the bill number.
 4. Display the bill amount.
 5. Ask for payment confirmation.
 6. Confirm payment.
 Maintain the flow based on previous responses.'''
 
-initialSystemMessage = '''You are PayLLM, a helpful assistant. Greet the user if the user greets you.'''
+# initialSystemMessage = '''You are PayLLM, a helpful assistant. Greet the user if the user greets you.'''
 
-globalMessages = [SystemMessage(content = initialSystemMessage), HumanMessage(content='Hello. Start my payment process.')]
-globalMessages = [SystemMessage(content = initialSystemMessage)]
+prompt_template = ChatPromptTemplate.from_messages(
+    [   
+        SystemMessage(content = initialSystemMessage),
+        MessagesPlaceholder(variable_name="messages"),
+    ]
+)
+
+workflow = StateGraph(state_schema=MessagesState)
 
 tools = [fetch_bill_details, process_payment, fetch_service_provider]
-toolsMap = {"fetch_bill_details":fetch_bill_details, "process_payment": process_payment, "fetch_service_provider":fetch_service_provider}
-llmService = llm.bind_tools(tools)
+llmT = llm.bind_tools(tools)
 
-aiMsgSer = llmService.invoke(globalMessages)
+def call_model(state: MessagesState):
+    prompt = prompt_template.invoke(state)
+    response = llmT.invoke(prompt)
+    print(response)
+    return {"messages": response}
+
+
+workflow.add_edge(START, "model")
+workflow.add_node("model", call_model)
+
+memory = MemorySaver()
+app = workflow.compile(checkpointer=memory)
+
+config = {"configurable": {"thread_id": "asutosh"}}
+
 while True:
-    # print(globalMessages)
-    if aiMsgSer.tool_calls:
-        for toolCallSer in aiMsgSer.tool_calls:
-            print(f"TOOL:{toolCallSer['name']}")
+    query = input("User Input:\n --> ")
+    if query.lower() == '/end': 
+            break
+    input_messages = [HumanMessage(query)]
+    output = app.invoke({"messages": input_messages}, config)
 
-    userInput = input("User Input:\n -->")
-    if userInput == '/end':
-        break
-    globalMessages.append(HumanMessage(content = userInput))
-    aiMsgSer = llmService.invoke(globalMessages)
-    if aiMsgSer.content != '':
-        print(f"AI Response:\n--> {aiMsgSer.content}")
-    globalMessages.append(aiMsgSer)
-
-
-# memory = InMemoryChatMessageHistory(session_id="payment-session")
-
-# prompt = ChatPromptTemplate.from_messages([
-#     ("system", initialSystemMessage), 
-#     ("placeholder", "{chat_history}"),
-#     ("human", "{input}"), 
-#     ("placeholder", "{agent_scratchpad}"),
-# ])
-
-# tools = [fetch_bill_details, process_payment, fetch_service_provider]
-# agent = create_tool_calling_agent(llm, tools, prompt)
-
-# agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=False)
-# agent_with_chat_history = RunnableWithMessageHistory(agent_executor,lambda session_id: memory, input_messages_key="input", history_messages_key="chat_history")
-# config = {"configurable": {"session_id": "payment-session"}}
-
-# while True:
-#     userInput = input("User Input:\n -->")
-#     if userInput == '/end':
-#         break
-#     # resp = agent_executor.invoke({'input':userInput})
-#     resp = agent_with_chat_history.invoke({"input": userInput}, config)
-#     print(resp['output'])
+    print(output["messages"][-1].content)
+    # break
