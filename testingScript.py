@@ -42,17 +42,18 @@ PayLLM: The bill is paid.
 '''
 
 initialSystemMessage2 = """
-You are PayLLM, an excellent virtual assistant for bill payments.
+You are PayLLM, an excellent and natural speaking virtual assistant for bill payments related tasks.
 
 ### General Rules:
 - In the first user interaction, respond **directly** without calling any tools.
 - Always **follow the structured step-by-step process** below.
 - **Never assume information** or use external knowledge beyond what the user provides.
 - **Ask only one question at a time** and store responses in memory before proceeding.
+- DO NOT HALLUNICATE AND BE NATURAL IN YOUR RESPONSE.
 
 ### Step-by-Step Process:
 0. Ask the user if they want to pay a bill.
-1. Ask for their **state**.
+1. Ask for their **state** in India.
 2. Ask for their **service provider**.
 3. Ask for their **bill number**.
 4. Ask if they want to **fetch bill details**.
@@ -60,43 +61,50 @@ You are PayLLM, an excellent virtual assistant for bill payments.
 6. Ask if they want to **proceed with payment**.
 7. If the user agrees, **pay the bill and confirm**.
 
-Only **fetch the bill details if all required information is collected.**
-
-### Example Conversation:
-User: Hello  
-PayLLM: Hi! Do you want to pay a bill today?  
-
-User: Yes.  
-PayLLM: Great! Which state are you in?  
-
-User: Delhi.  
-PayLLM: Got it. Please provide your service provider.  
-
-User: Airtel.  
-PayLLM: Thanks. What is your bill number?  
-
-User: 12345.  
-PayLLM: Should I fetch the bill details for you?  
-
-User: Yes, sure.  
-PayLLM: The bill amount is ₹145.  
-
-User: Okay. Go ahead and pay it.  
-PayLLM: Sure! The bill has been successfully paid.
+Only fetch the bill details if all required information is collected.
 """
 
 
-serviceDB = {'odisha':
-        {'electricity':['OELE1', 'OELE2', 'OELE3'], 'gas':['OGAS1', 'OGAS2', 'OGAS3', 'OGAS4'], 'water':['OWAT1', 'OWAT2']},
-    'goa':{'electricity':['GOELE1', 'GOELE2', 'GOELE2'], 'gas':['GOGAS1', 'GOGAS2', 'GOGAS3']},
-    'telangana':{'electricity':['TSELE1', 'TSELE2', 'TSELE2', 'TSELE3'], 'gas':['TSGAS1', 'TSGAS2', 'TSGAS3']}
+serviceDB = {
+    'odisha': {
+        'electricity': ['OELE1', 'OELE2', 'OELE3'],
+        'gas': ['OGAS1', 'OGAS2', 'OGAS3', 'OGAS4'],
+        'water': ['OWAT1', 'OWAT2']
+    },
+    'goa': {
+        'electricity': ['GOELE1', 'GOELE2', 'GOELE3'],
+        'gas': ['GOGAS1', 'GOGAS2', 'GOGAS3']
+    },
+    'telangana': {
+        'electricity': ['TSELE1', 'TSELE2', 'TSELE3', 'TSELE4'],
+        'gas': ['TSGAS1', 'TSGAS2', 'TSGAS3']
+    },
+    'maharashtra': {
+        'electricity': ['MHELE1', 'MHELE2', 'MHELE3'],
+        'gas': ['MHGAS1', 'MHGAS2', 'MHGAS3'],
+        'water': ['MHWT1', 'MHWT2']
+    },
+    'kerala': {
+        'electricity': ['KELE1', 'KELE2', 'KELE3'],
+        'gas': ['KEGAS1', 'KEGAS2'],
+        'water': ['KEWT1', 'KEWT2']
+    },
+    'karnataka': {
+        'electricity': ['KAELE1', 'KAELE2', 'KAELE3'],
+        'gas': ['KAGAS1', 'KAGAS2', 'KAGAS3'],
+        'water': ['KAWT1', 'KAWT2']
     }
+}
+
 
 billDB = {
-        "odisha": {"OGAS1": {"12345": "Rupees 145"}},
-        "telangana": {"TSELE2": {"67890": "Rupees 200"}}
-        }
-
+    "OGAS1": {"1234": "Rupees 145", "1357": "Rupees 512", "1245": "Rupees 918"},
+    "OGAS2": {"1140": "Rupees 415", "1357": "Rupees 215", "1635": "Rupees 819"},
+    "TSGAS2": {"2001": "Rupees 678", "2022": "Rupees 342", "2090": "Rupees 785"},
+    "TSGAS3": {"3005": "Rupees 500", "3040": "Rupees 999", "3099": "Rupees 1200"},
+    "TSELE2": {"4007": "Rupees 290", "4011": "Rupees 670", "4055": "Rupees 1020"},
+    "TSELE3": {"5009": "Rupees 845", "5020": "Rupees 560", "5095": "Rupees 1325"}
+}
 
 @tool
 def fetch_service_provider(state: str, service: str) -> str:
@@ -127,40 +135,42 @@ def fetch_service_provider(state: str, service: str) -> str:
     return f"The available service providers for '{service}' in '{state}' are: {', '.join(providers)}."
 
 
+# Tool to fetch bill details based on provider and bill number
 @tool
-def fetch_bill_details(state: str, provider: str, bill_number: str) -> str:
+def fetch_bill_details(provider: str, bill_number: str) -> str:
     """
-    Fetches bill details based on state, provider, and bill number.
+    Fetches bill details based on provider and bill number.
+    
     Args:
-        state (str): The state where the service provider operates.
         provider (str): The name of the service provider.
         bill_number (str): The user's bill number.
+        
     Returns:
         str: A message containing the bill amount or an appropriate error message.
     """
+    # Check if both provider and bill number are provided
+    if not provider or not bill_number:
+        return "Please provide the service provider and bill number to fetch bill details."
 
-    if not state or not provider or not bill_number:
-        return "Please provide the state, service provider, and bill number to fetch bill details."
-
-    state = state.strip().lower()
+    # Normalize input values
     provider = provider.strip().lower()
     bill_number = bill_number.strip()
 
-    if state not in billDB:
-        return f"Sorry, I couldn't find billing information for '{state}'. Please check the state name."
-    
-    if provider not in billDB[state]:
-        return f"Sorry, there are no bill records for provider '{provider}' in '{state}'."
+    # Check if the provider exists in billDB
+    if provider not in billDB:
+        return f"Sorry, there are no records for provider '{provider}' in the billing database."
 
-    if bill_number not in billDB[state][provider]:
-        return f"Invalid bill number '{bill_number}' for '{provider}' in '{state}'. Please double-check your bill number."
+    # Check if the bill number exists in the provider's record in billDB
+    if bill_number not in billDB[provider]:
+        return f"Invalid bill number '{bill_number}' for provider '{provider}'. Please double-check your bill number."
 
-    # Fetch and return bill details
-    bill_amount = billDB[state][provider][bill_number]
-    return f"The bill amount for '{provider}' in '{state}' (Bill No: {bill_number}) is {bill_amount}."
+    # Fetch and return the bill amount
+    bill_amount = billDB[provider][bill_number]
+    return f"The bill amount for '{provider}' (Bill No: {bill_number}) is {bill_amount}."
 
 def event():
     memory = [SystemMessage(content = initialSystemMessage2), HumanMessage(content='Start my payment process.')]
+    # memory = [SystemMessage(content = initialSystemMessage2)]
 
     tools = [fetch_service_provider, fetch_bill_details]
     toolsMap = {"fetch_service_provider":fetch_service_provider, "fetch_bill_details":fetch_bill_details}
@@ -186,5 +196,9 @@ def event():
             aiMsg = llmTool.invoke(memory)
         print(f"AI Response:\n--> {aiMsg.content}")
 
+try:
+    event()
+except Exception as e:
+    print(f"ERR: {e}")
 
 
