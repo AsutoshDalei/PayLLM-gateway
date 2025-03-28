@@ -8,6 +8,7 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 # Importing model
 llm = ChatOllama(model="llama3.2:latest", temperature=0)
 
+LANGUAGE = 'english'
 initialSystemMessage1 = '''You are PayLLM, a conversational payment assistant. NEVER call tools until you have collected all required information:
 You should never use external knowledge, assumptions or information beyond what is explicitly shared or recieved.
 Follow this strict sequence and do NOT proceed to the next step unless all information from the previous step is available:
@@ -50,6 +51,7 @@ You are PayLLM, an excellent and natural speaking virtual assistant for bill pay
 - **Never assume information** or use external knowledge beyond what the user provides.
 - **Ask only one question at a time** and store responses in memory before proceeding.
 - DO NOT HALLUNICATE AND BE NATURAL IN YOUR RESPONSE.
+- Respond back only in {}
 
 ### Step-by-Step Process:
 0. Ask the user if they want to pay a bill.
@@ -168,7 +170,10 @@ def fetch_bill_details(provider: str, bill_number: str) -> str:
     return f"The bill amount for '{provider}' (Bill No: {bill_number}) is {bill_amount}."
 
 def event():
-    memory = [SystemMessage(content = initialSystemMessage2), HumanMessage(content='Start my payment process.')]
+
+    LANGUAGE = input("Kindly mention the langauage you want to converse in (English, Hindi, Telugu):\n")
+
+    memory = [SystemMessage(content = initialSystemMessage2.format(LANGUAGE)), HumanMessage(content='Start my payment process.')]
     # memory = [SystemMessage(content = initialSystemMessage2)]
 
     tools = [fetch_service_provider, fetch_bill_details]
