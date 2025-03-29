@@ -53,11 +53,11 @@ You are PayLLM, an excellent and natural speaking virtual assistant for bill pay
 - DO NOT HALLUNICATE AND BE NATURAL IN YOUR RESPONSE.
 - Respond back only in {}
 
-### Step-by-Step Process:
+### Follow the below Step-by-Step process:
 0. Ask the user if they want to pay a bill.
-1. Ask for their **state** in India.
-2. Ask for their **service provider** and their **bill number**.
-4. Fetch and inform them about the **consumer amount**.
+1. Ask for their **state** in India and the utility service (electricity, water, gas).
+2. Ask for their **consumer number**.
+4. Fetch and inform them about the **consumer bill details**.
 5. Ask if they want to **proceed with payment**.
 6. If the user agrees, **pay the bill and confirm**.
 
@@ -98,12 +98,17 @@ serviceDB = {
 
 
 billDB = {
-    "ogas1": {"123a4": "rupees 145", "135a7": "rupees 512", "124a5": "rupees 918"},
-    "ogas2": {"114b0": "rupees 415", "135b7": "rupees 215", "163b5": "rupees 819"},
-    "tsgas2": {"200c1": "rupees 678", "202c2": "rupees 342", "209c0": "rupees 785"},
-    "tsgas3": {"300d5": "rupees 500", "304d0": "rupees 999", "309d9": "rupees 1200"},
-    "tsele2": {"400r7": "rupees 290", "401r1": "rupees 670", "405r5": "rupees 1020"},
-    "tsele3": {"500f9": "rupees 845", "502f0": "rupees 560", "509f5": "rupees 1325"}
+    9182: {'Customer Name': 'John Doe', 'service provider': 'MHELE1', 'unit': 32, 'Amount': 341, 'Due Date': '10/01/2025', 'status': 'Paid', 'service': 'electricity'},
+    1928: {'Customer Name': 'Jane Smith', 'service provider': 'MHELE2', 'unit': 37, 'Amount': 547, 'Due Date': '11/02/2025', 'status': 'Unpaid', 'service': 'electricity'},
+    1038: {'Customer Name': 'David Brown', 'service provider': 'KEGAS1', 'unit': 23, 'Amount': 298, 'Due Date': '09/10/2025', 'status': 'Paid', 'service': 'electricity'},
+    8321: {'Customer Name': 'Alice Johnson', 'service provider': 'OGAS1', 'Amount': 1008, 'Due Date': '04/03/2025', 'status': 'Paid', 'service': 'gas'},
+    9120: {'Customer Name': 'Grace Lee', 'service provider': 'KEGAS1', 'Amount': 1024, 'Due Date': '06/22/2025', 'status': 'Unpaid', 'service': 'gas'},
+    5310: {'Customer Name': 'Daniel Young', 'service provider': 'OGAS2', 'Amount': 1234, 'Due Date': '01/09/2025', 'status': 'Paid', 'service': 'gas'},
+    8034: {'Customer Name': 'Lucas Perez', 'service provider': 'OWAT1', 'Amount': 935, 'Due Date': '02/03/2025', 'status': 'Unpaid', 'service': 'water'},
+    2901: {'Customer Name': 'Zoe Mitchell', 'service provider': 'MHELE2', 'unit': 30, 'Amount': 520, 'Due Date': '04/10/2025', 'status': 'Paid', 'service': 'electricity'},
+    5407: {'Customer Name': 'Ethan Lee', 'service provider': 'MHELE1', 'unit': 44, 'Amount': 700, 'Due Date': '08/16/2025', 'status': 'Unpaid', 'service': 'electricity'},
+    1029: {'Customer Name': 'Chloe Adams', 'service provider': 'OGAS2', 'Amount': 960, 'Due Date': '01/12/2025', 'status': 'Paid', 'service': 'gas'},
+    3410: {'Customer Name': 'Ryan Scott', 'service provider': 'KEGAS1', 'Amount': 1150, 'Due Date': '03/07/2025', 'status': 'Unpaid', 'service': 'gas'}
 }
 
 @tool
@@ -135,43 +140,34 @@ def fetch_service_provider(state: str, service: str) -> str:
     return f"The available service providers for '{service}' in '{state}' are: {', '.join(providers)}."
 
 
-# Tool to fetch bill details based on provider and bill number
+# Tool to fetch bill details based on consumer number
 @tool
-def fetch_bill_details(provider: str, bill_number: str) -> str:
+def fetch_bill_details(consumer_number: int) -> str:
     """
-    Fetches bill details based on provider and bill number.
+    Fetches bill details based on consumer number.
     Args:
-        provider (str): The name of the service provider.
-        bill_number (str): The user's bill number.
+        consumer_number (int): The user's consumer number.
         
     Returns:
         str: A message containing the bill amount or an appropriate error message.
     """
     # Check if both provider and bill number are provided
-    if not provider or not bill_number:
-        return "Please provide the service provider and bill number to fetch bill details."
-
-    # Normalize input values
-    provider = provider.strip().lower()
-    bill_number = bill_number.strip()
-
-    # Check if the provider exists in billDB
-    if provider not in billDB:
-        assert "Prov Err"
-        return f"Sorry, there are no records for provider '{provider}' in the billing database."
+    if not consumer_number:
+        return "Please provide the consumer number to fetch bill details."
 
     # Check if the bill number exists in the provider's record in billDB
-    if bill_number not in billDB[provider]:
+    if consumer_number not in billDB:
         assert "BillNum Err"
-        return f"Invalid bill number '{bill_number}' for provider '{provider}'. Please double-check your bill number."
+        return f"Invalid consumer number '{consumer_number}'. Please double-check your bill number."
 
     # Fetch and return the bill amount
-    bill_amount = billDB[provider][bill_number]
-    return f"The bill amount for '{provider}' (Bill No: {bill_number}) is {bill_amount}."
+    bill_details = billDB[consumer_number]
+    return f"The status of consumer number: {consumer_number} of {bill_details['service']} utility is {bill_details['status']} for rupees {bill_details['Amount']} due {bill_details['Due Date']}"
+    
 
 def event():
 
-    LANGUAGE = input("Kindly mention the langauage you want to converse in (English, Hindi, Telugu):\n")
+    LANGUAGE = input("Kindly mention the langauage you want to converse in (English, Hindi, Telugu):\n -->")
 
     memory = [SystemMessage(content = initialSystemMessage2.format(LANGUAGE)), HumanMessage(content='Start my payment process.')]
     # memory = [SystemMessage(content = initialSystemMessage2)]
