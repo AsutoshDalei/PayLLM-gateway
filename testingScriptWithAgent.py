@@ -13,13 +13,13 @@ from databases import *
 llm = ChatOllama(model="llama3.2:latest", temperature=0)
 
 LANGUAGE = 'english'
-initialSystemMessage1 = '''You are VoxPay, a conversational payment assistant EXCLUSIVELY in India.
+initialSystemMessage1 = f'''You are VoxPay, a conversational payment assistant EXCLUSIVELY in India.
 ### General Rules:
 - NEVER call tools or proceed to the next step until you have collected all required information from the user.
 - Ask ONE question at a time, wait for the user’s response, and store it before moving forward.
 - Output ONLY the response for the current step, nothing else.
 - Do NOT repeat earlier messages or include examples unless explicitly asked.
-- Do NOT assume any information and do NOT mask the numbers.  
+- Do NOT assume any information (e.g. service providers) and do NOT mask the numbers.  
 - Follow this EXACT sequence:
 
 ### Step-by-Step Process:
@@ -27,7 +27,7 @@ initialSystemMessage1 = '''You are VoxPay, a conversational payment assistant EX
 2. After the user selects a language, say: "You have chosen [LANGUAGE]. To help with your bill payments, please provide your state in India where the bill is related."
 3. After the state is provided, say: "please provide your utility category? Options are: electricity, water, or gas."
 4. After the utility category is provided, say: "Please provide your service provider name."
-5. After the service provider is provided, say: "Please provide your consumer number."
+5. After the service provider is provided, Ask the user for their consumer number. say: "Please provide your consumer number."
 6. After the consumer number is provided, with the help of service provider name and consumer number, fetch the bill. say: "Thanks for providing the details. Hold on! I am fetching your bill details."
 7. Display the consumer number, Customer Name, bill amount, due date, and service provider name in a single statement. say: "Do you want me to pay yor bill. If yes please enter your UIP pin"
 8. Confirm payment. Say: Your bill payment has been successfully processed.
@@ -37,6 +37,34 @@ initialSystemMessage1 = '''You are VoxPay, a conversational payment assistant EX
 - Do not mention utility service providers until the user specifies the utility category.
 - Once bill paid you should remember only selected state name, incase your want to pay any other bill.
 '''
+
+initialSystemMessage2 = f'''You are VoxPay, a conversational payment assistant EXCLUSIVELY in India. Speak in {LANGUAGE}
+### General Rules:
+- NEVER call tools or proceed to the next step until you have collected all required information from the user.
+- Ask ONE question at a time, wait for the user’s response, and store it before moving forward.
+- Output ONLY the response for the current step, nothing else.
+- Do NOT repeat earlier messages or include examples unless explicitly asked.
+- Do NOT assume any information (e.g. service providers) and do NOT mask the numbers.  Do not make any assumptions.
+- Follow this EXACT sequence:
+
+### Step-by-Step Process:
+1. Greet the user with: "I’m VoxPay, your personal bill payment assistance. I am here to help you with your bill payment."
+2. After the user selects a language, say: "You have chosen [LANGUAGE]. To help with your bill payments, please provide your state in India where the bill is related."
+3. After the state is provided, ask the user about the utility they want to pay for. say: "please provide your utility category? Options are: electricity, water, or gas."
+4. Call the fetch_service_provider tool to get the list of service providers related to the particular state and utility. Tell the list to the user only after calling the tool.
+5. Ask the user their service provider, say: "Please provide your service provider name."
+6. After the service provider is provided, say: "Please provide your consumer number."
+7. After the consumer number is provided, with the help of service provider name and consumer number, fetch the bill. Display every detail. say: "Thanks for providing the details. Hold on! I am fetching your bill details."
+8. Display the consumer number, Customer Name, bill amount, due date, and service provider name in a single statement. say: "Do you want me to pay yor bill. If yes please enter your UIP pin"
+9. Confirm payment. Say: Your bill payment has been successfully processed.
+
+### Additional Rules:
+- If the user provides incomplete or unclear input (e.g., misspelled state), ask for clarification instead of guessing.
+- Do not mention utility service providers until the user specifies the utility category.
+- Once bill paid you should remember only selected state name, incase your want to pay any other bill.
+'''
+
+
 
 #State database  for state validation
 stateDB = {'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'}
@@ -50,9 +78,9 @@ utilityServiceDB = {'electricity', 'gas', 'water','mobile'}
 def set_language(user_input: str):
     """
     Sets the user's language preference.
-    Accepts 'English', 'Hindi', 'Telugu', 'odia', 'tamil', 'marathi', or 'bangali'.
+    Accepts 'English', 'Hindi', 'Telugu', 'odia', 'tamil', 'marathi', or 'bengali'.
     """
-    valid_languages = ["english", "hindi", "telugu", "tamil", "marathi","odia","bangali"]
+    valid_languages = ["english", "hindi", "telugu", "tamil", "marathi","odia","bengali"]
 
     if user_input.lower() in valid_languages:
         return f"Language set to {user_input}. Please provide the state in India where the bill is related."
@@ -101,7 +129,7 @@ def validate_consumer_number(user_input):
 
 
 @tool
-def fetch_service_provider(service: str, state: str, provider: str) -> str:
+def fetch_service_provider(service: str, state: str) -> str:
     """
     Fetches a list of service providers based on the user's state and bill service.
     Also validates if a given service provider is valid for the state and service.
@@ -109,11 +137,9 @@ def fetch_service_provider(service: str, state: str, provider: str) -> str:
     Args:
         service (str): The type of service for which the user wants to pay the bill.
         state (str): The state of residence of the user.
-        provider (str): The service provider name to validate.
     Returns:
-        str: str: A message containing either the list of service providers or a validation result.
+        str (str): A message containing either the list of service providers or a validation result.
     """
-
     if not state or not service:
         return "Please specify both the state and the service type to fetch providers."
 
@@ -126,11 +152,11 @@ def fetch_service_provider(service: str, state: str, provider: str) -> str:
     if service not in serviceDB[state]:
         return f"Sorry, there are no listed providers for '{service}' in '{state}'."
 
-    print('here')
-    available_providers = serviceDB[state][service]
-    print("here2")
 
-    if provider:
+    available_providers = serviceDB[state][service]
+
+
+    if False:
         provider = provider.strip()
         if provider in available_providers:
             return f"'{provider}' is a valid service provider for '{service}' in '{state}'."
@@ -204,13 +230,13 @@ def post_payment_navigation():
     """
     Provides options to the user after successful payment.
     """
-    return "Payment successful! Would you like to: \n" \
-           "1️. Pay another bill (same service, different provider/consumer number)\n" \
-           "2️. Choose a different utility type\n" \
-           "3️. Exit"
+    return '''Payment successful! Would you like to:
+           1️. Pay another bill (same service, different provider/consumer number)
+           2️. Choose a different utility type
+           3️. Exit'''
 
 # Function to Get Current Time Greeting (from first version)
-#@tool
+# @tool
 def get_greeting():
     """Return a time-based greeting."""
     current_hour = datetime.datetime.now().hour
@@ -223,9 +249,9 @@ def get_greeting():
     else:
         return "Good evening"
 
-tools = [set_language, validate_state, validate_utility_category_type, validate_consumer_number, fetch_service_provider, fetch_bill_details,process_bill_payment,
+tools = [validate_state, validate_utility_category_type, validate_consumer_number, fetch_service_provider, fetch_bill_details,process_bill_payment,
              post_payment_navigation]
-toolsMap = {"set_language": set_language, "validate_state": validate_state, "validate_utility_category_type": validate_utility_category_type,
+toolsMap = {"validate_state": validate_state, "validate_utility_category_type": validate_utility_category_type,
                 "validate_consumer_number": validate_consumer_number, "fetch_service_provider": fetch_service_provider,
                 "fetch_bill_details": fetch_bill_details,"process_bill_payment" : process_bill_payment, "post_payment_navigation": post_payment_navigation}
 llmTool = llm.bind_tools(tools)
@@ -235,15 +261,7 @@ def event():
     LANGUAGE = input(
         f"{get_greeting()}! I’m VoxPay, your personal bill payment assistance. I am here to help you with your bill payment.\nKindly mention the language you want to converse in (English, Hindi, Telugu):\n -->")
 
-    memory = [SystemMessage(content=initialSystemMessage1), HumanMessage(content=f"I've chosen {LANGUAGE}. Let's start my payment process.")]
-    # memory = [SystemMessage(content = initialSystemMessage2)]
-
-    #tools = [set_language,fetch_service_provider, fetch_bill_details]
-   # toolsMap = {"fetch_service_provider": fetch_service_provider, "fetch_bill_details": fetch_bill_details}
-
-    #llmService = llm
-   # llmTool = llm.bind_tools(tools)
-
+    memory = [SystemMessage(content=initialSystemMessage2.format(LANGUAGE))]
     firstInteraction = True
 
     while True:
@@ -262,12 +280,67 @@ def event():
             aiMsg = llmTool.invoke(memory)
         print(f"AI Response:\n--> {aiMsg.content}\n")
 
+def event2():
+    LANGUAGE = input(f"{get_greeting()}! I’m VoxPay, your personal bill payment assistance. I am here to help you with your bill payment.\nKindly mention the language you want to converse in (English, Hindi, Telugu):\n -->")
 
+    memory = [SystemMessage(content=initialSystemMessage1), HumanMessage(content=f"Hello! I want to speak in {LANGUAGE}. Let's start my payment process.")]
+
+    aiMsg = llmTool.invoke(memory)
+    print(f"AI Response:\n--> {aiMsg.content}\n")
+
+    while True:
+        userInput = input("User Input:\n -->").lower()
+        if userInput == '/end':
+            break
+        
+        memory.append(HumanMessage(content=userInput))
+        aiMsg = llmTool.invoke(memory)
+
+        if aiMsg.tool_calls:
+            for toolCall in aiMsg.tool_calls:
+                if toolCall['name'] in toolsMap:
+                    # print(f"TOOLCALL: {toolCall['name']}")
+                    toolMsg = toolsMap[toolCall['name']].invoke(toolCall)
+                    memory.append(toolMsg)
+            aiMsg = llmTool.invoke(memory)
+        print(f"AI Response:\n--> {aiMsg.content}\n")
+        memory.append(aiMsg)
+
+
+def eventScript():
+    # LANGUAGE = input(f"{get_greeting()}! I’m VoxPay, your personal bill payment assistance. I am here to help you with your bill payment.\nKindly mention the language you want to converse in (English, Hindi, Telugu):\n -->")
+    print(f"{get_greeting()}! I’m VoxPay, your personal bill payment assistance. I am here to help you with your bill payment.\nKindly mention the language you want to converse in (English, Hindi, Telugu):\n --> English")
+    LANGUAGE = 'english'
+    memory = [SystemMessage(content=initialSystemMessage1), HumanMessage(content=f"I've chosen {LANGUAGE}. Let's start my payment process.")]
+
+    firstInteraction = True
+
+    script = ['Hello', "I live in Karnataka", "I want to pay my electricity bill", "My service provider is BESCOM", "That is 2037"]
+    for scr in script:
+        print("User Input:\n -->", scr)
+        userInput = scr.lower()
+        if userInput == '/end':
+            break
+        memory.append(HumanMessage(content=userInput))
+        aiMsg = llmTool.invoke(memory)
+
+        if aiMsg.tool_calls:
+            for toolCall in aiMsg.tool_calls:
+                if toolCall['name'] in toolsMap:
+                    # print(f"TOOLCALL: {toolCall['name']}")
+                    toolMsg = toolsMap[toolCall['name']].invoke(toolCall)
+                    memory.append(toolMsg)
+            aiMsg = llmTool.invoke(memory)
+        print(f"AI Response:\n--> {aiMsg.content}\n")
 try:
     event()
+    # event2()
+    # eventScript()
 except Exception as e:
     print(f"ERR: {e}")
 
-# script = ['Hello', "I live in Odisha", "I want to pay my gas bill", "My service provider is OGAS1 and my bill number is 123a4"]
+
+
+
 
 
