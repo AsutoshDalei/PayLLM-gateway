@@ -100,7 +100,7 @@ serviceDB = {
 billDB = {
     9182: {'Customer Name': 'John Doe', 'service provider': 'MHELE1', 'unit': 32, 'Amount': 341, 'Due Date': '10/01/2025', 'status': 'Paid', 'service': 'electricity'},
     1928: {'Customer Name': 'Jane Smith', 'service provider': 'MHELE2', 'unit': 37, 'Amount': 547, 'Due Date': '11/02/2025', 'status': 'Unpaid', 'service': 'electricity'},
-    1038: {'Customer Name': 'David Brown', 'service provider': 'KEGAS1', 'unit': 23, 'Amount': 298, 'Due Date': '09/10/2025', 'status': 'Paid', 'service': 'electricity'},
+    1038: {'Customer Name': 'David Brown', 'service provider': 'OWAT2', 'Amount': 298, 'Due Date': '09/10/2025', 'status': 'Paid', 'service': 'water'},
     8321: {'Customer Name': 'Alice Johnson', 'service provider': 'OGAS1', 'Amount': 1008, 'Due Date': '04/03/2025', 'status': 'Paid', 'service': 'gas'},
     9120: {'Customer Name': 'Grace Lee', 'service provider': 'KEGAS1', 'Amount': 1024, 'Due Date': '06/22/2025', 'status': 'Unpaid', 'service': 'gas'},
     5310: {'Customer Name': 'Daniel Young', 'service provider': 'OGAS2', 'Amount': 1234, 'Due Date': '01/09/2025', 'status': 'Paid', 'service': 'gas'},
