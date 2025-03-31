@@ -1,274 +1,108 @@
 serviceDB = {
-    'andhra_pradesh': {
-        'electricity': ['APEPDCL','APSPDCL'],
-        'gas': ['IOCL','HPCL','BPCL'],
-        'water': ['APWRD'],
-        'mobile': ['Airtel','BSNL','Jio','Vi']
-    },
-    'assam': {
-        'electricity': ['APDCL'],
-        'gas': ['AGCL'],
-        'water': ['APHE'],
-        'mobile': ['Airtel','BSNL','Jio','Vi']
-    },
-    'bihar': {
-        'electricity': ['NBPDCL','SBPDCL'],
-        'gas': ['GAIL'],
-        'water': ['BPHE'],
-        'mobile': ['Airtel','BSNL','Jio','Vi']
-    },
-    'chhattisgarh': {
-        'electricity': ['CSPDCL'],
-        'gas': ['GAIL'],
-        'water': ['CPHE'],
-        'mobile': ['Airtel','BSNL','Jio','Vi']
-    },
     'goa': {
-        'electricity': ['GED'],
-        'gas': ['IOCL','HPCL','BPCL'],
-        'water': ['PWD'],
-        'mobile': ['Airtel','BSNL','Jio','Vi']
-    },
-    'gujarat': {
-        'electricity': ['DGVCL','MGVCL','PGVCL','UGVCL'],
-        'gas': ['GGL'],
-        'water': ['GWSSB'],
-        'mobile': ['Airtel','BSNL','Jio','Vi']
-    },
-    'haryana': {
-        'electricity': ['DHBVN','UHBVN'],
-        'gas': ['HCGDL'],
-        'water': ['PHED'],
-        'mobile': ['Airtel','BSNL','Jio','Vi']
-    },
-    'himachal_pradesh': {
-        'electricity': ['HPSEBL'],
-        'gas': ['IOCL','HPCL','BPCL'],
-        'water': ['IPH'],
-        'mobile': ['Airtel','BSNL','Jio','Vi']
-    },
-    'jharkhand': {
-        'electricity': ['JBVNL'],
-        'gas': ['GAIL'],
-        'water': ['JPHE'],
-        'mobile': ['Airtel','BSNL','Jio','Vi']
+        'electricity': ['ged'],
+        'gas': ['iocl','hpcl','bpcl'],
+        'water': ['pwd'],
+        'mobile': ['airtel','bsnl','jio','vi']
     },
     'karnataka': {
-        'electricity': ['BESCOM','MESCOM','HESCOM','GESCOM','CESCOM'],
-        'gas': ['GAIL'],
-        'water': ['BWSSB'],
-        'mobile': ['Airtel','BSNL','Jio','Vi']
-    },
-    'kerala': {
-        'electricity': ['KSEB'],
-        'gas': ['IOAGPL'],
-        'water': ['KWA'],
-        'mobile': ['Airtel','BSNL','Jio','Vi']
-    },
-    'madhya_pradesh': {
-        'electricity': ['MPPGCL','MPPTCL','MPPKVVCL','MPMKVVCL','MPPKVVCL'],
-        'gas': ['GAIL'],
-        'water': ['MPUDC'],
-        'mobile': ['Airtel','BSNL','Jio','Vi']
-    },
-    'maharashtra': {
-        'electricity': ['MSEDCL','TPC','AEML'],
-        'gas': ['MGL'],
-        'water': ['MMRDA'],
-        'mobile': ['Airtel','BSNL','Jio','Vi']
-    },
-    'manipur': {
-        'electricity': ['MSPDCL'],
-        'gas': ['IOCL','HPCL','BPCL'],
-        'water': ['PHED'],
-        'mobile': ['Airtel','BSNL','Jio','Vi']
-    },
-    'meghalaya': {
-        'electricity': ['MePDCL'],
-        'gas': ['IOCL','HPCL','BPCL'],
-        'water': ['PHED'],
-        'mobile': ['Airtel','BSNL','Jio','Vi']
-    },
-    'mizoram': {
-        'electricity': ['P&E'],
-        'gas': ['IOCL','HPCL','BPCL'],
-        'water': ['PHED'],
-        'mobile': ['Airtel','BSNL','Jio','Vi']
-    },
-    'nagaland': {
-        'electricity': ['DoP'],
-        'gas': ['IOCL','HPCL','BPCL'],
-        'water': ['PHED'],
-        'mobile': ['Airtel','BSNL','Jio','Vi']
-    },
-    'odisha': {
-        'electricity': ['TPNODL','TPSODL','TPCODL','TPWODL'],
-        'gas': ['GAIL'],
-        'water': ['PHEO'],
-        'mobile': ['Airtel','BSNL','Jio','Vi']
-    },
-    'punjab': {
-        'electricity': ['PSPCL'],
-        'gas': ['GAIL'],
-        'water': ['PWSSB'],
-        'mobile': ['Airtel','BSNL','Jio','Vi']
-    },
-    'rajasthan': {
-        'electricity': ['JVVNL','AVVNL','JdVVNL'],
-        'gas': ['RSGL'],
-        'water': ['PHED'],
-        'mobile': ['Airtel','BSNL','Jio','Vi']
-    },
-    'sikkim': {
-        'electricity': ['Sikkim Power'],
-        'gas': ['IOCL','HPCL','BPCL'],
-        'water': ['PHED'],
-        'mobile': ['Airtel','BSNL','Jio','Vi']
-    },
-    'tamil_nadu': {
-        'electricity': ['TANGEDCO'],
-        'gas': ['IOCL'],
-        'water': ['CMWSSB'],
-        'mobile': ['Airtel','BSNL','Jio','Vi']
+        'electricity': ['bescom','mescom','hescom','gescom','cescom'],
+        'gas': ['gail'],
+        'water': ['bwssb'],
+        'mobile': ['airtel','bsnl','jio','vi']
     },
     'telangana': {
-        'electricity': ['TSSPDCL','TSNPDCL'],
-        'gas': ['BGL'],
-        'water': ['HMWSSB'],
-        'mobile': ['Airtel','BSNL','Jio','Vi']
+        'electricity': ['tsspdcl','tsnpdcl'],
+        'gas': ['bgl'],
+        'water': ['hmwssb'],
+        'mobile': ['airtel','bsnl','jio','vi']
     }
 }
 
 billDB = {
-    # Andhra Pradesh
-    2001: {'Customer Name': 'Ravi Teja', 'service provider': 'APSPDCL', 'unit': 42, 'Amount': 550,
-           'Due Date': '15/04/2025', 'status': 'Paid', 'service': 'electricity'},
-    2002: {'Customer Name': 'Divya Reddy', 'service provider': 'HPCL', 'Amount': 1050, 'Due Date': '18/07/2025',
-           'status': 'Unpaid', 'service': 'gas'},
-    2003: {'Customer Name': 'Manoj Kumar', 'service provider': 'Vijayawada Water Board', 'Amount': 700,
-           'Due Date': '10/11/2025', 'status': 'Paid', 'service': 'water'},
-    2004: {'Customer Name': 'Sita Devi', 'service provider': 'Jio', 'Amount': 499, 'Due Date': '05/05/2026',
-           'status': 'Unpaid', 'service': 'mobile'},
+    # karnataka
+    2037: {'customer name': 'rajesh shetty', 'service provider': 'bescom', 'unit': 48, 'amount': 710,
+           'due date': '25/06/2025', 'status': 'paid', 'service': 'electricity'},
+    2038: {'customer name': 'anjali rao', 'service provider': 'indane gas', 'amount': 1230, 'due date': '20/09/2025',
+           'status': 'unpaid', 'service': 'gas'},
+    2039: {'customer name': 'vivek patil', 'service provider': 'bangalore water supply', 'amount': 860,
+           'due date': '15/11/2025', 'status': 'paid', 'service': 'water'},
+    2040: {'customer name': 'sneha kulkarni', 'service provider': 'airtel', 'amount': 599, 'due date': '05/10/2026',
+           'status': 'unpaid', 'service': 'mobile'},
+    # goa
+    2045: {'customer name': 'anil naik', 'service provider': 'goa electricity dept', 'unit': 48, 'amount': 690,
+           'due date': '15/05/2025', 'status': 'paid', 'service': 'electricity'},
+    2046: {'customer name': 'sneha gaonkar', 'service provider': 'hpcl', 'amount': 1100, 'due date': '20/07/2025',
+           'status': 'unpaid', 'service': 'gas'},
+    2047: {'customer name': 'rohan kamat', 'service provider': 'panjim water board', 'amount': 850,
+           'due date': '25/10/2025', 'status': 'paid', 'service': 'water'},
+    2048: {'customer name': 'vishal desai', 'service provider': 'jio', 'amount': 599, 'due date': '08/09/2026',
+           'status': 'unpaid', 'service': 'mobile'},
+}
 
-    # Arunachal Pradesh
-    2005: {'Customer Name': 'Tenzing Norbu', 'service provider': 'Arunachal Power', 'unit': 30, 'Amount': 460,
-           'Due Date': '20/06/2025', 'status': 'Paid', 'service': 'electricity'},
-    2006: {'Customer Name': 'Karma Dorjee', 'service provider': 'IOCL', 'Amount': 980, 'Due Date': '12/08/2025',
-           'status': 'Unpaid', 'service': 'gas'},
-    2007: {'Customer Name': 'Dorjee Wangchuk', 'service provider': 'AP Jal Board', 'Amount': 620,
-           'Due Date': '07/10/2025', 'status': 'Paid', 'service': 'water'},
-    2008: {'Customer Name': 'Sonam Bhutia', 'service provider': 'Airtel', 'Amount': 799, 'Due Date': '20/07/2026',
-           'status': 'Unpaid', 'service': 'mobile'},
 
-    # Assam
-    2009: {'Customer Name': 'Debashish Das', 'service provider': 'APDCL', 'unit': 55, 'Amount': 730,
-           'Due Date': '25/08/2025', 'status': 'Paid', 'service': 'electricity'},
-    2010: {'Customer Name': 'Priyanka Bora', 'service provider': 'Bharat Gas', 'Amount': 1100, 'Due Date': '15/09/2025',
-           'status': 'Unpaid', 'service': 'gas'},
-    2011: {'Customer Name': 'Anurag Deka', 'service provider': 'Guwahati Jal Board', 'Amount': 850,
-           'Due Date': '12/12/2025', 'status': 'Paid', 'service': 'water'},
-    2012: {'Customer Name': 'Rohit Mahanta', 'service provider': 'Vodafone Idea', 'Amount': 649,
-           'Due Date': '30/06/2026', 'status': 'Unpaid', 'service': 'mobile'},
+providerDB = {'goa': 
+       {
+              'electricity': {'ged':1821},
+              'gas':{'iocl':7812, 'hpcl':3388, 'bpcl':3455},
+              'water':{'pwd':4280},
+              'mobile':{'airtel':4730, 'bsnl':1566, 'jio':9615, 'vi':1290}
+              },
+       'karnataka': 
+       {
+              'electricity': {'bescom': 4823, 'mescom': 3591, 'hescom': 2456, 'gescom': 5647, 'cescom': 7632},
+              'gas': {'gail': 5123},
+              'water': {'bwssb': 6342},
+              'mobile': {'airtel': 4730, 'bsnl': 1566, 'jio': 9615, 'vi': 1290}
+              },
+       'telangana': 
+       {
+              'electricity': {'tsspdcl': 8021, 'tsnpdcl': 9174},
+              'gas': {'bgl': 3491},
+              'water': {'hmwssb': 5283},
+              'mobile': {'airtel': 4730, 'bsnl': 1566, 'jio': 9615, 'vi': 1290}
+              },
+       'odisha': 
+       {
+              'electricity': {'cesu': 7412, 'wesco': 3925, 'neco': 8123, 'sldc': 4598},
+              'gas': {'indane': 2645},
+              'water': {'owssb': 5339},
+              'mobile': {'airtel': 4730, 'bsnl': 1566, 'jio': 9615, 'vi': 1290}
+       }
+       }
 
-    # Bihar
-    2013: {'Customer Name': 'Satyam Kumar', 'service provider': 'NBPDCL', 'unit': 48, 'Amount': 600,
-           'Due Date': '10/09/2025', 'status': 'Paid', 'service': 'electricity'},
-    2014: {'Customer Name': 'Nidhi Jha', 'service provider': 'GAIL', 'Amount': 1250, 'Due Date': '05/10/2025',
-           'status': 'Unpaid', 'service': 'gas'},
-    2015: {'Customer Name': 'Alok Prasad', 'service provider': 'Patna Jal Parishad', 'Amount': 920,
-           'Due Date': '20/11/2025', 'status': 'Paid', 'service': 'water'},
-    2016: {'Customer Name': 'Neeraj Singh', 'service provider': 'BSNL', 'Amount': 549, 'Due Date': '05/07/2026',
-           'status': 'Unpaid', 'service': 'mobile'},
+consumerDB = {
+    2037: {'customer name': 'rajesh shetty', 'state':'odisha',
+           7412:{'service':'electricity', 'service_provider':'cesu','unit': 48, 'amount': 710,'due date': '25/06/2025', 'status': 'paid'},
+           4730:{'service':'mobile', 'service_provider':'airtel', 'amount': 599,'due date': '15/08/2025', 'status': 'unpaid'}
+           }
+}
 
-    # Chhattisgarh
-    2017: {'Customer Name': 'Vinod Tiwari', 'service provider': 'CSPDCL', 'unit': 52, 'Amount': 670,
-           'Due Date': '15/10/2025', 'status': 'Paid', 'service': 'electricity'},
-    2018: {'Customer Name': 'Megha Verma', 'service provider': 'Indane Gas', 'Amount': 1300, 'Due Date': '10/11/2025',
-           'status': 'Unpaid', 'service': 'gas'},
-    2019: {'Customer Name': 'Kiran Das', 'service provider': 'Raipur Jal Board', 'Amount': 990,
-           'Due Date': '25/12/2025', 'status': 'Paid', 'service': 'water'},
-    2020: {'Customer Name': 'Arjun Sharma', 'service provider': 'MTNL', 'Amount': 599, 'Due Date': '10/08/2026',
-           'status': 'Unpaid', 'service': 'mobile'},
-
-    # Telangana
-    2021: {'Customer Name': 'Arun Reddy', 'service provider': 'TSSPDCL', 'unit': 50, 'Amount': 620,
-           'Due Date': '12/05/2025', 'status': 'Paid', 'service': 'electricity'},
-    2022: {'Customer Name': 'Meena Rao', 'service provider': 'HPCL', 'Amount': 1150, 'Due Date': '15/08/2025',
-           'status': 'Unpaid', 'service': 'gas'},
-    2023: {'Customer Name': 'Ramesh Goud', 'service provider': 'Hyderabad Water Board', 'Amount': 760,
-           'Due Date': '18/10/2025', 'status': 'Paid', 'service': 'water'},
-    2024: {'Customer Name': 'Priya Nair', 'service provider': 'Airtel', 'Amount': 699, 'Due Date': '25/07/2026',
-           'status': 'Unpaid', 'service': 'mobile'},
-
-    # Odisha
-    2025: {'Customer Name': 'Deepak Mohanty', 'service provider': 'TPNODL', 'unit': 45, 'Amount': 590,
-           'Due Date': '22/06/2025', 'status': 'Paid', 'service': 'electricity'},
-    2026: {'Customer Name': 'Kavita Das', 'service provider': 'Bharat Gas', 'Amount': 1120, 'Due Date': '28/08/2025',
-           'status': 'Unpaid', 'service': 'gas'},
-    2027: {'Customer Name': 'Sanjay Pattnaik', 'service provider': 'PHEO', 'Amount': 830,
-           'Due Date': '30/12/2025', 'status': 'Paid', 'service': 'water'},
-    2028: {'Customer Name': 'Sneha Mishra', 'service provider': 'Vodafone Idea', 'Amount': 649,
-           'Due Date': '15/09/2026', 'status': 'Unpaid', 'service': 'mobile'},
-
-    # West Bengal
-    2029: {'Customer Name': 'Subhajit Roy', 'service provider': 'WBSEDCL', 'unit': 60, 'Amount': 780,
-           'Due Date': '18/07/2025', 'status': 'Paid', 'service': 'electricity'},
-    2030: {'Customer Name': 'Ankita Bose', 'service provider': 'Indane Gas', 'Amount': 1220, 'Due Date': '22/09/2025',
-           'status': 'Unpaid', 'service': 'gas'},
-    2031: {'Customer Name': 'Amitava Sen', 'service provider': 'Kolkata Water Supply', 'Amount': 910,
-           'Due Date': '27/11/2025', 'status': 'Paid', 'service': 'water'},
-    2032: {'Customer Name': 'Debjani Ghosh', 'service provider': 'BSNL', 'Amount': 599, 'Due Date': '10/10/2026',
-           'status': 'Unpaid', 'service': 'mobile'},
-
-    # Tamil Nadu
-    2033: {'Customer Name': 'Vikram Iyer', 'service provider': 'TANGEDCO', 'unit': 55, 'Amount': 750,
-           'Due Date': '20/08/2025', 'status': 'Paid', 'service': 'electricity'},
-    2034: {'Customer Name': 'Lakshmi Raman', 'service provider': 'HPCL', 'Amount': 1180, 'Due Date': '25/10/2025',
-           'status': 'Unpaid', 'service': 'gas'},
-    2035: {'Customer Name': 'Rajeshwari M', 'service provider': 'Chennai Water Supply', 'Amount': 890,
-           'Due Date': '05/12/2025', 'status': 'Paid', 'service': 'water'},
-    2036: {'Customer Name': 'Suresh Kumar', 'service provider': 'Jio', 'Amount': 799, 'Due Date': '30/11/2026',
-           'status': 'Unpaid', 'service': 'mobile'},
-
-    # Karnataka
-    2037: {'Customer Name': 'Rajesh Shetty', 'service provider': 'BESCOM', 'unit': 48, 'Amount': 710,
-           'Due Date': '25/06/2025', 'status': 'Paid', 'service': 'electricity'},
-    2038: {'Customer Name': 'Anjali Rao', 'service provider': 'Indane Gas', 'Amount': 1230, 'Due Date': '20/09/2025',
-           'status': 'Unpaid', 'service': 'gas'},
-    2039: {'Customer Name': 'Vivek Patil', 'service provider': 'Bangalore Water Supply', 'Amount': 860,
-           'Due Date': '15/11/2025', 'status': 'Paid', 'service': 'water'},
-    2040: {'Customer Name': 'Sneha Kulkarni', 'service provider': 'Airtel', 'Amount': 599, 'Due Date': '05/10/2026',
-           'status': 'Unpaid', 'service': 'mobile'},
-
-    # Maharashtra
-    2041: {'Customer Name': 'Amit Joshi', 'service provider': 'MSEB', 'unit': 52, 'Amount': 730, 'Due Date': '10/06/2025', 'status': 'Paid', 'service': 'electricity'},
-    2042: {'Customer Name': 'Neha Deshmukh', 'service provider': 'Bharat Gas', 'Amount': 1190, 'Due Date': '18/09/2025', 'status': 'Unpaid', 'service': 'gas'},
-    2043: {'Customer Name': 'Rohit Patil', 'service provider': 'Mumbai Water Board', 'Amount': 920, 'Due Date': '28/11/2025', 'status': 'Paid', 'service': 'water'},
-    2044: {'Customer Name': 'Pooja Sharma', 'service provider': 'Vodafone Idea', 'Amount': 699, 'Due Date': '05/10/2026', 'status': 'Unpaid', 'service': 'mobile'},
-
-    # Goa
-    2045: {'Customer Name': 'Anil Naik', 'service provider': 'Goa Electricity Dept', 'unit': 48, 'Amount': 690,
-           'Due Date': '15/05/2025', 'status': 'Paid', 'service': 'electricity'},
-    2046: {'Customer Name': 'Sneha Gaonkar', 'service provider': 'HPCL', 'Amount': 1100, 'Due Date': '20/07/2025',
-           'status': 'Unpaid', 'service': 'gas'},
-    2047: {'Customer Name': 'Rohan Kamat', 'service provider': 'Panjim Water Board', 'Amount': 850,
-           'Due Date': '25/10/2025', 'status': 'Paid', 'service': 'water'},
-    2048: {'Customer Name': 'Vishal Desai', 'service provider': 'Jio', 'Amount': 599, 'Due Date': '08/09/2026',
-           'status': 'Unpaid', 'service': 'mobile'},
-
-    # Uttar Pradesh
-    2049: {'Customer Name': 'Arvind Mishra', 'service provider': 'UPPCL', 'unit': 58, 'Amount': 810,
-           'Due Date': '12/06/2025', 'status': 'Paid', 'service': 'electricity'},
-    2050: {'Customer Name': 'Pallavi Singh', 'service provider': 'Indane Gas', 'Amount': 1250, 'Due Date': '22/08/2025',
-           'status': 'Unpaid', 'service': 'gas'},
-    2051: {'Customer Name': 'Rajeev Yadav', 'service provider': 'Lucknow Jal Sansthan', 'Amount': 880,
-           'Due Date': '30/12/2025', 'status': 'Paid', 'service': 'water'},
-    2052: {'Customer Name': 'Nikita Verma', 'service provider': 'Airtel', 'Amount': 699, 'Due Date': '15/11/2026',
-           'status': 'Unpaid', 'service': 'mobile'},
-
-    # Delhi
-    2053: {'Customer Name': 'Amit Sharma', 'service provider': 'BSES Rajdhani', 'unit': 62, 'Amount': 920, 'Due Date': '18/06/2025', 'status': 'Paid', 'service': 'electricity'},
-    2054: {'Customer Name': 'Priya Mehta', 'service provider': 'Indane Gas', 'Amount': 1300, 'Due Date': '25/08/2025', 'status': 'Unpaid', 'service': 'gas'},
-    2055: {'Customer Name': 'Suresh Gupta', 'service provider': 'Delhi Jal Board', 'Amount': 890, 'Due Date': '05/12/2025', 'status': 'Paid', 'service': 'water'},
-    2056: {'Customer Name': 'Anjali Verma', 'service provider': 'Airtel', 'Amount': 799, 'Due Date': '20/11/2026', 'status': 'Unpaid', 'service': 'mobile'}
+consumerDB = {
+    2037: {
+        'customer name': 'rajesh shetty',
+        'state': 'odisha',
+        7412: {'service': 'electricity', 'service_provider': 'cesu', 'unit': 48, 'amount': 710, 'due date': '25/06/2025', 'status': 'paid'},
+        4730: {'service': 'mobile', 'service_provider': 'airtel', 'amount': 599, 'due date': '15/08/2025', 'status': 'unpaid'}
+    },
+    2045: {
+        'customer name': 'pradeep kumar',
+        'state': 'karnataka',
+        3591: {'service': 'electricity', 'service_provider': 'mescom', 'unit': 55, 'amount': 840, 'due date': '10/07/2025', 'status': 'unpaid'},
+        4730: {'service': 'mobile', 'service_provider': 'airtel', 'amount': 710, 'due date': '30/09/2025', 'status': 'paid'},
+        5123: {'service': 'gas', 'service_provider': 'gail', 'amount': 1200, 'due date': '05/07/2025', 'status': 'paid'}
+    },
+    2052: {
+        'customer name': 'anita singh',
+        'state': 'telangana',
+        8021: {'service': 'electricity', 'service_provider': 'tsspdcl', 'unit': 65, 'amount': 950, 'due date': '20/07/2025', 'status': 'unpaid'},
+        9615: {'service': 'mobile', 'service_provider': 'jio', 'amount': 850, 'due date': '25/08/2025', 'status': 'paid'},
+        5283: {'service': 'water', 'service_provider': 'hmwssb', 'amount': 350, 'due date': '28/06/2025', 'status': 'unpaid'}
+    },
+    2061: {
+        'customer name': 'suresh rao',
+        'state': 'odisha',
+        7412: {'service': 'electricity', 'service_provider': 'cesu', 'unit': 72, 'amount': 1050, 'due date': '12/07/2025', 'status': 'paid'},
+        9615: {'service': 'mobile', 'service_provider': 'jio', 'amount': 699, 'due date': '05/09/2025', 'status': 'unpaid'}
+    }
 }

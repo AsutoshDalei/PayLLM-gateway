@@ -50,10 +50,10 @@ initialSystemMessage2 = f'''You are VoxPay, a conversational payment assistant E
 ### Step-by-Step Process:
 1. Greet the user with: "I’m VoxPay, your personal bill payment assistance. I am here to help you with your bill payment."
 2. After the user selects a language, say: "You have chosen [LANGUAGE]. To help with your bill payments, please provide your state in India where the bill is related."
-3. After the state is provided, ask the user about the utility they want to pay for. say: "please provide your utility category? Options are: electricity, water, or gas."
+3. After the state is provided, ask the user about the utility they want to pay for. say: "please provide your utility category?"
 4. Call the fetch_service_provider tool to get the list of service providers related to the particular state and utility. Tell the list to the user only after calling the tool.
 5. Ask the user their service provider, say: "Please provide your service provider name."
-6. After the service provider is provided, say: "Please provide your consumer number."
+6. Ask the user their consumer number, say: "Please provide your consumer number."
 7. After the consumer number is provided, with the help of service provider name and consumer number, fetch the bill. Display every detail. say: "Thanks for providing the details. Hold on! I am fetching your bill details."
 8. Display the consumer number, Customer Name, bill amount, due date, and service provider name in a single statement. say: "Do you want me to pay yor bill. If yes please enter your UIP pin"
 9. Confirm payment. Say: Your bill payment has been successfully processed.
@@ -162,7 +162,7 @@ def fetch_service_provider(service: str, state: str) -> str:
             return f"'{provider}' is a valid service provider for '{service}' in '{state}'."
         else:
             return f"'{provider}' is not a valid service provider for '{service}' in '{state}'. Available providers: {', '.join(available_providers)}."
-
+    return f"The available service providers for '{service}' in '{state}' are: {available_providers}."
     return f"The available service providers for '{service}' in '{state}' are: {', '.join(available_providers)}."
 
 

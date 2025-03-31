@@ -5,6 +5,8 @@ from langchain_ollama import ChatOllama
 from langchain_core.tools import tool
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
+from databases import *
+
 # Importing model
 llm = ChatOllama(model="llama3.2:latest", temperature=0)
 
@@ -42,74 +44,34 @@ PayLLM: Sure.
 PayLLM: The bill is paid.
 '''
 
-initialSystemMessage2 = """
-You are PayLLM, an excellent and natural speaking virtual assistant for bill payments related tasks.
-
+initialSystemMessage2 = f'''You are VoxPay, a conversational payment assistant EXCLUSIVELY in India. Speak in {LANGUAGE}
 ### General Rules:
-- In the first user interaction, respond **directly** without calling any tools.
-- Always **follow the structured step-by-step process** below.
-- **Never assume information** or use external knowledge beyond what the user provides.
-- **Ask only one question at a time** and store responses in memory before proceeding.
-- DO NOT HALLUNICATE AND BE NATURAL IN YOUR RESPONSE.
-- Respond back only in {}
+- NEVER call tools or proceed to the next step until you have collected all required information from the user.
+- Ask ONE question at a time, wait for the user’s response, and store it before moving forward.
+- Output ONLY the response for the current step, nothing else.
+- Do NOT repeat earlier messages or include examples unless explicitly asked.
+- Do NOT assume any information (e.g. service providers) and do NOT mask the numbers.  Do not make any assumptions.
+- Follow this EXACT sequence:
 
-### Follow the below Step-by-Step process:
-0. Ask the user if they want to pay a bill.
-1. Ask for their **state** in India and the utility service (electricity, water, gas).
-2. Ask for their **consumer number**.
-4. Fetch and inform them about the **consumer bill details**.
-5. Ask if they want to **proceed with payment**.
-6. If the user agrees, **pay the bill and confirm**.
+### Step-by-Step Process:
+1. Greet the user with: "I’m VoxPay, your personal bill payment assistance. I am here to help you with your bill payment."
+2. After the user selects a language, say: "You have chosen [LANGUAGE]. To help with your bill payments, please provide your state in India where the bill is related."
+3. After the state is provided, ask the user about the utility they want to pay for. say: "please provide your utility category?"
+4. Call the fetch_service_provider tool to get the list of service providers related to the particular state and utility. Tell the list to the user only after calling the tool.
+5. Ask the user their service provider, say: "Please provide your service provider name."
+6. Ask the user their consumer number, say: "Please provide your consumer number."
+7. After the consumer number is provided, with the help of service provider name and consumer number, fetch the bill. Display every detail. say: "Thanks for providing the details. Hold on! I am fetching your bill details."
+8. Display the consumer number, Customer Name, bill amount, due date, and service provider name in a single statement. say: "Do you want me to pay yor bill. If yes please enter your UIP pin"
+9. Confirm payment. Say: Your bill payment has been successfully processed.
 
-Only fetch the bill details if all required information is collected.
-"""
-
-
-serviceDB = {
-    'odisha': {
-        'electricity': ['OELE1', 'OELE2', 'OELE3'],
-        'gas': ['OGAS1', 'OGAS2', 'OGAS3', 'OGAS4'],
-        'water': ['OWAT1', 'OWAT2']
-    },
-    'goa': {
-        'electricity': ['GOELE1', 'GOELE2', 'GOELE3'],
-        'gas': ['GOGAS1', 'GOGAS2', 'GOGAS3']
-    },
-    'telangana': {
-        'electricity': ['TSELE1', 'TSELE2', 'TSELE3', 'TSELE4'],
-        'gas': ['TSGAS1', 'TSGAS2', 'TSGAS3']
-    },
-    'maharashtra': {
-        'electricity': ['MHELE1', 'MHELE2', 'MHELE3'],
-        'gas': ['MHGAS1', 'MHGAS2', 'MHGAS3'],
-        'water': ['MHWT1', 'MHWT2']
-    },
-    'kerala': {
-        'electricity': ['KELE1', 'KELE2', 'KELE3'],
-        'gas': ['KEGAS1', 'KEGAS2'],
-        'water': ['KEWT1', 'KEWT2']
-    },
-    'karnataka': {
-        'electricity': ['KAELE1', 'KAELE2', 'KAELE3'],
-        'gas': ['KAGAS1', 'KAGAS2', 'KAGAS3'],
-        'water': ['KAWT1', 'KAWT2']
-    }
-}
+### Additional Rules:
+- If the user provides incomplete or unclear input (e.g., misspelled state), ask for clarification instead of guessing.
+- Do not mention utility service providers until the user specifies the utility category.
+- Once bill paid you should remember only selected state name, incase your want to pay any other bill.
+'''
 
 
-billDB = {
-    9182: {'Customer Name': 'John Doe', 'service provider': 'MHELE1', 'unit': 32, 'Amount': 341, 'Due Date': '10/01/2025', 'status': 'Paid', 'service': 'electricity'},
-    1928: {'Customer Name': 'Jane Smith', 'service provider': 'MHELE2', 'unit': 37, 'Amount': 547, 'Due Date': '11/02/2025', 'status': 'Unpaid', 'service': 'electricity'},
-    1038: {'Customer Name': 'David Brown', 'service provider': 'OWAT2', 'Amount': 298, 'Due Date': '09/10/2025', 'status': 'Paid', 'service': 'water'},
-    8321: {'Customer Name': 'Alice Johnson', 'service provider': 'OGAS1', 'Amount': 1008, 'Due Date': '04/03/2025', 'status': 'Paid', 'service': 'gas'},
-    9120: {'Customer Name': 'Grace Lee', 'service provider': 'KEGAS1', 'Amount': 1024, 'Due Date': '06/22/2025', 'status': 'Unpaid', 'service': 'gas'},
-    5310: {'Customer Name': 'Daniel Young', 'service provider': 'OGAS2', 'Amount': 1234, 'Due Date': '01/09/2025', 'status': 'Paid', 'service': 'gas'},
-    8034: {'Customer Name': 'Lucas Perez', 'service provider': 'OWAT1', 'Amount': 935, 'Due Date': '02/03/2025', 'status': 'Unpaid', 'service': 'water'},
-    2901: {'Customer Name': 'Zoe Mitchell', 'service provider': 'MHELE2', 'unit': 30, 'Amount': 520, 'Due Date': '04/10/2025', 'status': 'Paid', 'service': 'electricity'},
-    5407: {'Customer Name': 'Ethan Lee', 'service provider': 'MHELE1', 'unit': 44, 'Amount': 700, 'Due Date': '08/16/2025', 'status': 'Unpaid', 'service': 'electricity'},
-    1029: {'Customer Name': 'Chloe Adams', 'service provider': 'OGAS2', 'Amount': 960, 'Due Date': '01/12/2025', 'status': 'Paid', 'service': 'gas'},
-    3410: {'Customer Name': 'Ryan Scott', 'service provider': 'KEGAS1', 'Amount': 1150, 'Due Date': '03/07/2025', 'status': 'Unpaid', 'service': 'gas'}
-}
+
 
 @tool
 def fetch_service_provider(state: str, service: str) -> str:
@@ -128,37 +90,70 @@ def fetch_service_provider(state: str, service: str) -> str:
     state = state.strip().lower()
     service = service.strip().lower()
 
-    if state not in serviceDB:
+    if state not in providerDB:
         return f"Sorry, I couldn't find service providers for '{state}'. Please check the state name."
 
     if service not in serviceDB[state]:
         return f"Sorry, there are no listed providers for '{service}' in '{state}'."
 
     # Fetch providers
-    providers = serviceDB[state][service]
+    providers = serviceDB[state][service].keys()
 
     return f"The available service providers for '{service}' in '{state}' are: {', '.join(providers)}."
+
+@tool
+def validate_provider(service_provider: str, state: str, service: str):
+    """
+    Validates if service_provider is available or not.
+    Args:
+        state (str): The state of residence of the user.
+        service (str): The type of service for which the user wants to pay the bill.
+        service_provider (str): The service provider's name for the utility.
+    Returns:
+        str: If the service_provider is available in the database or the list of service provider's code (based on availability)
+    """
+    if not service_provider or not state or not service:
+        return "INVALID_ARGS"
+    
+    if service_provider not in providerDB[state][service]:
+        # return "The provided {service_provider} is not available."
+        return 'False'
+    return providerDB[state][service][service_provider]
+    # return "The provided {service_provider} is available."
+
+@tool
+def validate_consumer(consumer_num: int):
+    """
+    Validates if the consumer_number is available or not.
+    Args:
+        consumer_num (str): The user's consumer number.
+    Returns:
+        str: If the consumer_number is available in the database or the dictionary of the consumer's bills and information.
+    """
+    if not consumer_num:
+        return "INVALID_ARGS"
+    if consumer_num not in consumerDB:
+        return 'False'
+    return consumerDB[consumer_num]
 
 
 # Tool to fetch bill details based on consumer number
 @tool
-def fetch_bill_details(consumer_number: int) -> str:
+def fetch_bill_details(consumer_details: dict, service_provider: int) -> str:
     """
     Fetches bill details based on consumer number.
     Args:
         consumer_number (int): The user's consumer number.
-        
+        service_provider (str): The service provider's name for the utility. 
     Returns:
         str: A message containing the bill amount or an appropriate error message.
     """
     # Check if both provider and bill number are provided
-    if not consumer_number:
-        return "Please provide the consumer number to fetch bill details."
+    if not consumer_details or not service_provider:
+        return "Please provide the consumer number and service provider's name to fetch bill details."
 
-    # Check if the bill number exists in the provider's record in billDB
-    if consumer_number not in billDB:
-        assert "BillNum Err"
-        return f"Invalid consumer number '{consumer_number}'. Please double-check your bill number."
+    if service_provider not in consumer_details:
+
 
     # Fetch and return the bill amount
     bill_details = billDB[consumer_number]
@@ -170,10 +165,9 @@ def event():
     LANGUAGE = input("Kindly mention the langauage you want to converse in (English, Hindi, Telugu):\n -->")
 
     memory = [SystemMessage(content = initialSystemMessage2.format(LANGUAGE)), HumanMessage(content='Start my payment process.')]
-    # memory = [SystemMessage(content = initialSystemMessage2)]
 
-    tools = [fetch_service_provider, fetch_bill_details]
-    toolsMap = {"fetch_service_provider":fetch_service_provider, "fetch_bill_details":fetch_bill_details}
+    tools = [fetch_service_provider, validate_provider, validate_consumer]
+    toolsMap = {"fetch_service_provider":fetch_service_provider, "validate_provider":validate_provider, 'validate_consumer':validate_consumer}
 
 
     llmService = llm
@@ -190,7 +184,31 @@ def event():
 
         if aiMsg.tool_calls:
             for toolCall in aiMsg.tool_calls:
-                if toolCall['name'] in toolsMap:
+                if toolCall['name'] == 'validate_provider':
+                    valProv = toolsMap[toolCall['name']].invoke(toolCall)
+                    if valProv == "INVALID_ARGS":
+                        memory.append(SystemMessage(content = "Tell the user that the input arguments are wrong. Ask them to correct them."))
+                        # break
+                    elif valProv == 'False':
+                        memory.append(SystemMessage(content = "Tell the user that the service provider is unavailable. Ask them to correct them."))
+                        # break
+                    else:
+                        memory.append(SystemMessage(content= f'The code for user\'s service provider is {valProv}.'))
+
+                elif toolCall['name'] == 'validate_consumer':
+                    valCons = toolsMap[toolCall['name']].invoke(toolCall)
+                    if valCons == "INVALID_ARGS":
+                        memory.append(SystemMessage(content = "Tell the user that the input arguments are wrong. Ask them to correct them."))
+                        # break
+                    elif valCons == 'False':
+                        memory.append(SystemMessage(content = "Tell the user that the consumer number is unavailable. Ask them to correct them."))
+                        # break
+                    else:
+                        memory.append()
+
+
+
+                elif toolCall['name'] in toolsMap:
                     # print(f"TOOLCALL: {toolCall['name']}")
                     toolMsg = toolsMap[toolCall['name']].invoke(toolCall)
                     memory.append(toolMsg)
