@@ -9,7 +9,7 @@ from databases import *
 
 # Importing model
 llm = ChatOllama(model="llama3.2:latest", temperature=0)
-llm = ChatOllama(model="gemma3:4b")
+# llm = ChatOllama(model="mistral", temperature=0)
 
 LANGUAGE = 'english'
 initialSystemMessage1 = '''You are PayLLM, a conversational payment assistant. NEVER call tools until you have collected all required information:
@@ -59,7 +59,7 @@ initialSystemMessage2 = f'''You are VoxPay, a conversational payment assistant E
 1. Greet the user with: "I’m VoxPay, your personal bill payment assistance. I am here to help you with your bill payment."
 2. After that, say: "To help with your bill payments, please provide the utility service you want to pay for". This is the service.
 4. Ask the user their consumer number, say: "Please provide your consumer number". This is the consumer_number.
-5. After the consumer_number is provided, with the help of service and consumer_number, fetch the bill. Display every detail. say: "Thanks for providing the details. Hold on! I am fetching your bill details."
+5. After the consumer_number is provided, with the help of service and consumer_number, fetch the bill using the fetch_bill_details tool. Display every detail. say: "Thanks for providing the details. Hold on! I am fetching your bill details."
 6. Display the consumer number, Customer Name, bill amount, due date, and service provider name in a single statement. say: "Do you want me to pay yor bill. If yes please enter your UIP pin"
 7. Confirm payment. Say: Your bill payment has been successfully processed.
 
@@ -69,20 +69,44 @@ initialSystemMessage2 = f'''You are VoxPay, a conversational payment assistant E
 - Once bill paid you should remember only selected state name, incase your want to pay any other bill.
 '''
 
+initialSystemMessage3 = f'''You are VoxPay, a conversational payment assistant EXCLUSIVELY in India. Speak in {LANGUAGE}
+### General Rules:
+- NEVER call tools or proceed to the next step until you have collected all required information from the user.
+- Ask ONE question at a time, wait for the user’s response, and store it before moving forward.
+- Output ONLY the response for the current step, nothing else.
+- Strictly do NOT repeat earlier messages or include examples unless explicitly asked.
+- Do NOT assume any information (e.g. service providers) and do NOT mask the numbers.  Do not make any assumptions. Do not deviate.
+- Follow this EXACT sequence. Do not explicitly mention it to the user:
+
+### Step-by-Step Process:
+1. Start with greeting the user.
+2. After the user responds, ask the user to  provide the utility service they to pay for. This is the service.
+4. After getting the service, ask the user their consumer number. This is the consumer_number.
+5. After the consumer_number is provided, with the help of service and consumer_number, fetch the bill using the fetch_bill_details tool. Display every detail.
+6. Only after fetching the bill and displaying the details (display the consumer number, Customer Name, bill amount, due date, and service provider name in a single statement). Ask: "Do you want me to pay yor bill. If yes please enter your UIP pin"
+7. Confirm payment. Say: Your bill payment has been successfully processed.
+
+### Additional Rules:
+- Do not hallucinate.
+- If the user provides incomplete or unclear input (e.g., misspelled state), ask for clarification instead of guessing.
+- Do not mention utility service providers until the user specifies the utility category.
+- Once bill paid you should remember only selected state name, incase your want to pay any other bill.
+'''
+
 
 # Tool to fetch bill details based on consumer number
 @tool
-def fetch_bill_details(consumer_number: int, service: str) -> str:
+def fetch_bill_details(consumer_number: str, service: str) -> str:
     """
     Tool to fetches bill details based on consumer number and .
     Args:
-        consumer_number (int): The user's consumer number.
+        consumer_number (str): The user's consumer number.
         service (str): The service the user wants to pay the bill for. 
     Returns:
         str: A message containing the bill amount or an appropriate error message.
     """
     # Check if both provider and bill number are provided
-    if not consumer_number or not service:
+    if not consumer_number or not service or consumer_number=='' or service=='':
         return "Please provide the consumer number and service to fetch bill details."
 
     if consumer_number not in consumerDB:
@@ -90,7 +114,7 @@ def fetch_bill_details(consumer_number: int, service: str) -> str:
 
 
     # Fetch and return the bill amount
-    bill_details = billDB[consumer_number]
+    bill_details = consumerDB[consumer_number]
 
     if service not in bill_details:
         return f"No bills linked to the {service} for the consumer were found in the database."
@@ -103,7 +127,7 @@ def event():
     LANGUAGE = input("Kindly mention the langauage you want to converse in (English, Hindi, Telugu):\n -->")
 
     memory = [SystemMessage(content = initialSystemMessage2.format(LANGUAGE)), HumanMessage(content='Start my payment process.')]
-    memory = [SystemMessage(content = initialSystemMessage2.format(LANGUAGE))]
+    memory = [SystemMessage(content = initialSystemMessage3.format(LANGUAGE))]
 
 
     tools = [fetch_bill_details]
@@ -112,7 +136,7 @@ def event():
 
     llmTool = llm.bind_tools(tools)
 
-    firstInteraction = True
+    firstInteraction = False
 
     while True:
         userInput = input("User Input:\n -->").lower()
