@@ -36,7 +36,9 @@ from langchain_ollama import ChatOllama
 from langchain_core.tools import tool
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
-from databases import *
+from langchain.callbacks import get_openai_callback
+
+# from databases import *
 
 # Importing model
 llm = ChatOllama(model="llama3.2:latest", temperature=0)
@@ -165,7 +167,6 @@ def event():
     tools = [fetch_bill_details]
     toolsMap = {"fetch_bill_details":fetch_bill_details}
 
-
     llmTool = llm.bind_tools(tools)
 
     firstInteraction = False
@@ -191,7 +192,9 @@ def event():
 
         
 try:
-    event()
+    with get_openai_callback() as cb:
+        event()
+        print("Total Tokens Used in transaction: ", cb.total_tokens)
 except Exception as e:
     print(f"ERR: {e}")
 
