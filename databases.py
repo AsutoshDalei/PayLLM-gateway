@@ -71,38 +71,32 @@ providerDB = {'goa':
        }
        }
 
-consumerDB = {
-    2037: {'customer name': 'rajesh shetty', 'state':'odisha',
-           7412:{'service':'electricity', 'service_provider':'cesu','unit': 48, 'amount': 710,'due date': '25/06/2025', 'status': 'paid'},
-           4730:{'service':'mobile', 'service_provider':'airtel', 'amount': 599,'due date': '15/08/2025', 'status': 'unpaid'}
-           }
-}
 
 consumerDB = {
     2037: {
         'customer name': 'rajesh shetty',
         'state': 'odisha',
-        7412: {'service': 'electricity', 'service_provider': 'cesu', 'unit': 48, 'amount': 710, 'due date': '25/06/2025', 'status': 'paid'},
-        4730: {'service': 'mobile', 'service_provider': 'airtel', 'amount': 599, 'due date': '15/08/2025', 'status': 'unpaid'}
+        'electricity': {'serviceCode':7412, 'service_provider': 'cesu', 'unit': 48, 'amount': 710, 'due date': '25/06/2025', 'status': 'paid'},
+        'mobile': {'service': 4730, 'service_provider': 'airtel', 'amount': 599, 'due date': '15/08/2025', 'status': 'unpaid'}
     },
     2045: {
         'customer name': 'pradeep kumar',
         'state': 'karnataka',
-        3591: {'service': 'electricity', 'service_provider': 'mescom', 'unit': 55, 'amount': 840, 'due date': '10/07/2025', 'status': 'unpaid'},
-        4730: {'service': 'mobile', 'service_provider': 'airtel', 'amount': 710, 'due date': '30/09/2025', 'status': 'paid'},
-        5123: {'service': 'gas', 'service_provider': 'gail', 'amount': 1200, 'due date': '05/07/2025', 'status': 'paid'}
+        'electricity': {'service': 3591, 'service_provider': 'mescom', 'unit': 55, 'amount': 840, 'due date': '10/07/2025', 'status': 'unpaid'},
+        'mobile': {'service': 4730, 'service_provider': 'airtel', 'amount': 710, 'due date': '30/09/2025', 'status': 'paid'},
+        'gas': {'service': 5123, 'service_provider': 'gail', 'amount': 1200, 'due date': '05/07/2025', 'status': 'paid'}
     },
     2052: {
         'customer name': 'anita singh',
         'state': 'telangana',
-        8021: {'service': 'electricity', 'service_provider': 'tsspdcl', 'unit': 65, 'amount': 950, 'due date': '20/07/2025', 'status': 'unpaid'},
-        9615: {'service': 'mobile', 'service_provider': 'jio', 'amount': 850, 'due date': '25/08/2025', 'status': 'paid'},
-        5283: {'service': 'water', 'service_provider': 'hmwssb', 'amount': 350, 'due date': '28/06/2025', 'status': 'unpaid'}
+        'electricity': {'service': 8021, 'service_provider': 'tsspdcl', 'unit': 65, 'amount': 950, 'due date': '20/07/2025', 'status': 'unpaid'},
+        'mobile': {'service': 9651, 'service_provider': 'jio', 'amount': 850, 'due date': '25/08/2025', 'status': 'paid'},
+        'gas': {'service': 5283, 'service_provider': 'hmwssb', 'amount': 350, 'due date': '28/06/2025', 'status': 'unpaid'}
     },
     2061: {
         'customer name': 'suresh rao',
         'state': 'odisha',
-        7412: {'service': 'electricity', 'service_provider': 'cesu', 'unit': 72, 'amount': 1050, 'due date': '12/07/2025', 'status': 'paid'},
-        9615: {'service': 'mobile', 'service_provider': 'jio', 'amount': 699, 'due date': '05/09/2025', 'status': 'unpaid'}
+        'electricity': {'service': 7412, 'service_provider': 'cesu', 'unit': 72, 'amount': 1050, 'due date': '12/07/2025', 'status': 'paid'},
+        'mobile': {'service': 9651, 'service_provider': 'jio', 'amount': 699, 'due date': '05/09/2025', 'status': 'unpaid'}
     }
 }
