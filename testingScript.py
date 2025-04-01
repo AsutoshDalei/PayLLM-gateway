@@ -1,3 +1,34 @@
+
+consumerDB = {
+    '2037a': {
+        'customer name': 'rajesh shetty',
+        'state': 'odisha',
+        'electricity': {'serviceCode':7412, 'service_provider': 'cesu', 'unit': 48, 'amount': 710, 'due date': '25/06/2025', 'status': 'paid'},
+        'mobile': {'service': 4730, 'service_provider': 'airtel', 'amount': 599, 'due date': '15/08/2025', 'status': 'unpaid'}
+    },
+    '2045a': {
+        'customer name': 'pradeep kumar',
+        'state': 'karnataka',
+        'electricity': {'service': 3591, 'service_provider': 'mescom', 'unit': 55, 'amount': 840, 'due date': '10/07/2025', 'status': 'unpaid'},
+        'mobile': {'service': 4730, 'service_provider': 'airtel', 'amount': 710, 'due date': '30/09/2025', 'status': 'paid'},
+        'gas': {'service': 5123, 'service_provider': 'gail', 'amount': 1200, 'due date': '05/07/2025', 'status': 'paid'}
+    },
+    '2052a': {
+        'customer name': 'anita singh',
+        'state': 'telangana',
+        'electricity': {'service': 8021, 'service_provider': 'tsspdcl', 'unit': 65, 'amount': 950, 'due date': '20/07/2025', 'status': 'unpaid'},
+        'mobile': {'service': 9651, 'service_provider': 'jio', 'amount': 850, 'due date': '25/08/2025', 'status': 'paid'},
+        'gas': {'service': 5283, 'service_provider': 'hmwssb', 'amount': 350, 'due date': '28/06/2025', 'status': 'unpaid'}
+    },
+    '2061a': {
+        'customer name': 'suresh rao',
+        'state': 'odisha',
+        'electricity': {'service': 7412, 'service_provider': 'cesu', 'unit': 72, 'amount': 1050, 'due date': '12/07/2025', 'status': 'paid'},
+        'mobile': {'service': 9651, 'service_provider': 'jio', 'amount': 699, 'due date': '05/09/2025', 'status': 'unpaid'}
+    }
+}
+
+
 # Importing necessary packages
 import json
 
@@ -9,7 +40,6 @@ from databases import *
 
 # Importing model
 llm = ChatOllama(model="llama3.2:latest", temperature=0)
-# llm = ChatOllama(model="mistral", temperature=0)
 
 LANGUAGE = 'english'
 initialSystemMessage1 = '''You are PayLLM, a conversational payment assistant. NEVER call tools until you have collected all required information:
@@ -82,8 +112,8 @@ initialSystemMessage3 = f'''You are VoxPay, a conversational payment assistant E
 1. Start with greeting the user.
 2. After the user responds, ask the user to  provide the utility service they to pay for. This is the service.
 4. After getting the service, ask the user their consumer number. This is the consumer_number.
-5. After the consumer_number is provided, with the help of service and consumer_number, fetch the bill using the fetch_bill_details tool. Display every detail.
-6. Only after fetching the bill and displaying the details (display the consumer number, Customer Name, bill amount, due date, and service provider name in a single statement). Ask: "Do you want me to pay yor bill. If yes please enter your UIP pin"
+5. After the consumer_number is provided, with the help of service and consumer_number, fetch the bill using the fetch_bill_details tool. Display the consumer number, Customer Name, bill amount, due date, and service provider name in a single statement.
+6. Only after ask the user if they want to pay the bill. Ask: "Do you want me to pay your bill. If yes please enter your UIP pin"
 7. Confirm payment. Say: Your bill payment has been successfully processed.
 
 ### Additional Rules:
@@ -109,17 +139,19 @@ def fetch_bill_details(consumer_number: str, service: str) -> str:
     if not consumer_number or not service or consumer_number=='' or service=='':
         return "Please provide the consumer number and service to fetch bill details."
 
-    if consumer_number not in consumerDB:
+    if consumer_number.lower() not in consumerDB:
+
         return "No bills linked to the provided consumer were found in the database."
 
 
     # Fetch and return the bill amount
-    bill_details = consumerDB[consumer_number]
+    bill_details = consumerDB[consumer_number.lower()]
 
     if service not in bill_details:
         return f"No bills linked to the {service} for the consumer were found in the database."
+    # print(bill_details[service.lower()])
 
-    return f"The status of consumer number: {consumer_number} of {service} utility is {bill_details[service]}"
+    return f"The status of consumer {bill_details['customer name']} number: {consumer_number} of {service} utility is {bill_details[service.lower()]}"
     
 
 def event():
@@ -148,7 +180,6 @@ def event():
             aiMsg = llm.invoke(memory)
         else:
             aiMsg = llmTool.invoke(memory)
-        
 
         if aiMsg.tool_calls:
             for toolCall in aiMsg.tool_calls:
